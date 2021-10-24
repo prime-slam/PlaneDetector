@@ -2,6 +2,7 @@ import sys
 import open3d as o3d
 import cv2
 import numpy as np
+import OutlierDetector
 
 from CVATAnnotation import CVATAnnotation
 
@@ -53,4 +54,5 @@ if __name__ == '__main__':
         convert_rgb_to_intensity=False
     )
     pcd = depth_to_pcd(rgbd_image, cam_intrinsic)
-    o3d.visualization.draw_geometries([pcd])
+    pcd_with_outliers = OutlierDetector.remove_planes_outliers(pcd)
+    o3d.visualization.draw_geometries([pcd_with_outliers])
