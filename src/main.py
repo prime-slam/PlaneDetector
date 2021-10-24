@@ -1,51 +1,60 @@
-import sys
+import argparse
 import open3d as o3d
-import cv2
 import numpy as np
 import OutlierDetector
 
 from CVATAnnotation import CVATAnnotation
+from src.utils import draw_polygones, rgbd_to_pcd
 
 
-def depth_to_pcd(rgbd_image, camera_intrinsics):
-    pcd = o3d.geometry.PointCloud.create_from_rgbd_image(
-        rgbd_image,
-        camera_intrinsics
+def create_input_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        'depth_path',
+        type=str,
+        help='Path to depth image'
     )
-    pcd.transform([[-1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
-    return pcd
+    parser.add_argument(
+        'annotations_path',
+        type=str,
+        help='Path to annotations.xml file in CVAT for video format'
+    )
+    parser.add_argument(
+        '--annotation_frame_number',
+        type=int,
+        default=0,
+        help='Number of frame in annotations.xml which will be used for annotations extraction. By default first '
+             'frame is used '
+    )
 
-
-def draw_polygone(image, plane):
-    contours = np.array(plane.points)
-    cv2.fillPoly(image, pts=np.int32([contours]), color=plane.color)
-    return image
-
-
-def draw_polygones(planes):
-    image = np.zeros((480, 640, 3), np.uint8)
-    for plane in planes:
-        draw_polygone(image, plane)
-    cv2.imwrite("out.png", image)
-    return image
+    return parser
 
 
 if __name__ == '__main__':
-    path_to_depth = sys.argv[1]
-    path_to_annotations = sys.argv[2]
-    annotations = CVATAnnotation(path_to_annotations)
-    all_planes = annotations.get_all_planes_for_frame(0)
-    annotated_rgb = draw_polygones(all_planes)
+    parser = create_input_parser()
+    args = parser.parse_args()
+    path_to_depth = args.depth_path
+    path_to_annotations = args.annotations_path
+    frame_number = args.annotation_frame_number
+
     depth_image = o3d.io.read_image(path_to_depth)
+    image_shape = np.asarray(depth_image).shape
+
+    annotation = CVATAnnotation(path_to_annotations)
+    all_planes = annotation.get_all_planes_for_frame(frame_number)
+    annotated_rgb = draw_polygones(all_planes, image_shape)
+    color_image = o3d.geometry.Image(annotated_rgb)
+
+    # Taken from https://www.doc.ic.ac.uk/~ahanda/VaFRIC/codes.html
     cam_intrinsic = o3d.camera.PinholeCameraIntrinsic(
-        width=640,
-        height=480,
+        width=image_shape[1],
+        height=image_shape[0],
         fx=481.20,  # X-axis focal length
         fy=-480.00,  # Y-axis focal length
         cx=319.50,  # X-axis principle point
         cy=239.50,  # Y-axis principle point
     )
-    color_image = o3d.io.read_image("out.png")
+
     rgbd_image = o3d.geometry.RGBDImage.create_from_color_and_depth(
         color_image,
         depth_image,
@@ -53,6 +62,7 @@ if __name__ == '__main__':
         depth_trunc=1000.0,
         convert_rgb_to_intensity=False
     )
-    pcd = depth_to_pcd(rgbd_image, cam_intrinsic)
+    pcd = rgbd_to_pcd(rgbd_image, cam_intrinsic)
+
     pcd_with_outliers = OutlierDetector.remove_planes_outliers(pcd)
     o3d.visualization.draw_geometries([pcd_with_outliers])
