@@ -1,5 +1,6 @@
-import numpy as np
 from lxml import objectify
+
+from src.utils.colors import get_random_color
 
 
 def parse_points(points_str):
@@ -38,7 +39,7 @@ class CVATAnnotation:
     class Track:
         def __init__(self):
             self.planes = []
-            self.color = tuple([int(x) for x in np.random.choice(range(256), size=3)])
+            self.color = get_random_color()
 
         def append(self, plane):
             self.planes.append(plane)

@@ -4,7 +4,9 @@ import numpy as np
 import OutlierDetector
 
 from CVATAnnotation import CVATAnnotation
-from src.utils import draw_polygones, rgbd_to_pcd
+from src.detectors import O3DRansacDetector
+from src.utils.annotations import draw_polygones
+from src.utils.point_cloud import rgbd_to_pcd, depth_to_pcd
 
 
 def create_input_parser():
@@ -55,14 +57,17 @@ if __name__ == '__main__':
         cy=239.50,  # Y-axis principle point
     )
 
-    rgbd_image = o3d.geometry.RGBDImage.create_from_color_and_depth(
-        color_image,
-        depth_image,
-        depth_scale=5000.0,
-        depth_trunc=1000.0,
-        convert_rgb_to_intensity=False
-    )
-    pcd = rgbd_to_pcd(rgbd_image, cam_intrinsic)
+    # rgbd_image = o3d.geometry.RGBDImage.create_from_color_and_depth(
+    #     color_image,
+    #     depth_image,
+    #     depth_scale=5000.0,
+    #     depth_trunc=1000.0,
+    #     convert_rgb_to_intensity=False
+    # )
+    # pcd = rgbd_to_pcd(rgbd_image, cam_intrinsic)
+    # pcd_with_outliers = OutlierDetector.remove_planes_outliers(pcd)
+    # o3d.visualization.draw_geometries([pcd_with_outliers])
 
-    pcd_with_outliers = OutlierDetector.remove_planes_outliers(pcd)
-    o3d.visualization.draw_geometries([pcd_with_outliers])
+    pcd = depth_to_pcd(depth_image, cam_intrinsic)
+    detected_pcd = O3DRansacDetector.detect_planes(pcd)
+    o3d.visualization.draw_geometries([detected_pcd])
