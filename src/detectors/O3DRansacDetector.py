@@ -1,7 +1,6 @@
 import open3d as o3d
 
-from src.utils.colors import get_random_normalized_color
-from src.utils.point_cloud import merge_pcd
+from src.SegmentedPointCloud import SegmentedPointCloud, SegmentedPlane
 
 
 def detect_plane(pcd):
@@ -15,16 +14,12 @@ def detect_plane(pcd):
     return inlier_cloud, outlier_cloud
 
 
-def detect_planes(pcd, num_planes=5):
+def detect_planes(pcd: o3d.geometry.PointCloud, num_planes=5) -> SegmentedPointCloud:
     outlier_pcd = pcd
-    result = o3d.geometry.PointCloud()
+    detected_planes = []
 
     for _ in range(num_planes):
         inlier_pcd, outlier_pcd = detect_plane(outlier_pcd)
-        color = get_random_normalized_color()
-        inlier_pcd.paint_uniform_color(color)
-        result = merge_pcd(result, inlier_pcd)
+        detected_planes.append(SegmentedPlane(inlier_pcd))
 
-    black_color = [0., 0., 0.]
-    outlier_pcd.paint_uniform_color(black_color)
-    return merge_pcd(result, outlier_pcd)
+    return SegmentedPointCloud(detected_planes, outlier_pcd)

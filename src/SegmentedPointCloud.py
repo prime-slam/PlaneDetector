@@ -1,0 +1,31 @@
+import open3d as o3d
+
+from src.utils.colors import get_random_color, normalize_color
+from src.utils.point_cloud import merge_pcd
+
+
+class SegmentedPlane:
+    def __init__(self, pcd: o3d.geometry.PointCloud):
+        self.pcd = pcd
+        self.color = get_random_color()
+        self.normalized_color = normalize_color(self.color)
+        pcd.paint_uniform_color(self.normalized_color)
+
+
+class SegmentedPointCloud:
+
+    def __init__(self, planes: [SegmentedPlane] = None, unsegmented_cloud: o3d.geometry.PointCloud = None):
+        if planes is None:
+            planes = []
+        self.planes = planes
+        if unsegmented_cloud is None:
+            unsegmented_cloud = o3d.geometry.PointCloud()
+        self.unsegmented_cloud = unsegmented_cloud
+        self.unsegmented_cloud.paint_uniform_color([0., 0., 0.])
+
+    def get_color_pcd_for_visualization(self):
+        res = self.unsegmented_cloud
+        for plane in self.planes:
+            res = merge_pcd(res, plane.pcd)
+
+        return res
