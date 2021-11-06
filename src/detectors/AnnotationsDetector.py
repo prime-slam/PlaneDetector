@@ -1,9 +1,10 @@
 import open3d as o3d
 import numpy as np
 
-from src.SegmentedPointCloud import SegmentedPlane, SegmentedPointCloud
+from src.SegmentedPlane import SegmentedPlane
+from src.SegmentedPointCloud import SegmentedPointCloud
 from src.utils.annotations import draw_polygones
-from src.utils.colors import color_to_string, color_from_string
+from src.utils.colors import color_to_string
 from src.utils.point_cloud import rgbd_to_pcd
 
 

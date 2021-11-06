@@ -1,4 +1,5 @@
 open3d~=0.13.0
+pytest~=6.2.5
 numpy~=1.21.3
 opencv-python~=4.5.4.58
 lxml~=4.6.3

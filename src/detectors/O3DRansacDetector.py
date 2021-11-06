@@ -1,6 +1,7 @@
 import open3d as o3d
 
-from src.SegmentedPointCloud import SegmentedPointCloud, SegmentedPlane
+from src.SegmentedPlane import SegmentedPlane
+from src.SegmentedPointCloud import SegmentedPointCloud
 
 
 def detect_plane(pcd):

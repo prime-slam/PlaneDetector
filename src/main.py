@@ -6,6 +6,7 @@ import OutlierDetector
 
 from CVATAnnotation import CVATAnnotation
 from src.detectors import AnnotationsDetector, O3DRansacDetector
+from src.metrics.benchmark import benchmark_iou
 from src.utils.point_cloud import depth_to_pcd
 
 
@@ -67,6 +68,11 @@ if __name__ == '__main__':
         )
         if args.annotation_filter_outliers:
             result_pcd = OutlierDetector.remove_planes_outliers(result_pcd)
+
+        pcd = depth_to_pcd(depth_image, cam_intrinsic)
+        detected_pcd = O3DRansacDetector.detect_planes(pcd)
+
+        benchmark_iou(detected_pcd, result_pcd)
     else:
         pcd = depth_to_pcd(depth_image, cam_intrinsic)
         result_pcd = O3DRansacDetector.detect_planes(pcd)
@@ -74,4 +80,5 @@ if __name__ == '__main__':
     if result_pcd is None:
         print("Nothing to visualize!")
     else:
+        o3d.visualization.draw_geometries([detected_pcd.get_color_pcd_for_visualization()])
         o3d.visualization.draw_geometries([result_pcd.get_color_pcd_for_visualization()])

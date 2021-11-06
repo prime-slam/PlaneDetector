@@ -1,5 +1,3 @@
-import open3d as o3d
-
 from src.SegmentedPointCloud import SegmentedPointCloud, SegmentedPlane
 from src.detectors.O3DRansacDetector import detect_plane
 from src.utils.point_cloud import merge_pcd
