@@ -43,9 +43,15 @@ def pcd_delta(pcd_left: o3d.geometry.PointCloud, pcd_right: o3d.geometry.PointCl
     return res
 
 
-def planes_union_pcd(plane_left: SegmentedPlane, plane_right: SegmentedPlane) -> o3d.geometry.PointCloud:
-    intersection = planes_intersection_pcd(plane_left, plane_right)
-    pcd_only_left = pcd_delta(plane_left.pcd, intersection)
+def planes_union_pcd(
+        plane_left: SegmentedPlane,
+        plane_right: SegmentedPlane,
+        intersection_pcd: o3d.geometry.PointCloud = None
+) -> o3d.geometry.PointCloud:
+    if intersection_pcd is None:
+        intersection_pcd = planes_intersection_pcd(plane_left, plane_right)
+
+    pcd_only_left = pcd_delta(plane_left.pcd, intersection_pcd)
     pcd_only_left_points = np.asarray(pcd_only_left.points)
 
     union_points = np.concatenate((pcd_only_left_points, plane_right.pcd.points), axis=0)
@@ -53,3 +59,20 @@ def planes_union_pcd(plane_left: SegmentedPlane, plane_right: SegmentedPlane) ->
     res.points = o3d.utility.Vector3dVector(union_points)
 
     return res
+
+
+def are_nearly_overlapped(plane_predicted: SegmentedPlane, plane_gt: SegmentedPlane, required_overlap: float):
+    """
+    Calculate if planes are overlapped enough (80%) to be used for PP-PR metric
+    :param required_overlap: overlap threshold which will b checked to say that planes overlaps
+    :param plane_predicted: predicted segmentation
+    :param plane_gt: ground truth segmentation
+    :return: true if planes are overlapping by 80% or more, false otherwise
+    """
+    intersection = planes_intersection_pcd(plane_predicted, plane_gt)
+    intersection_size = np.asarray(intersection.points).size
+    gt_size = np.asarray(plane_gt.pcd.points).size
+    predicted_size = np.asarray(plane_predicted.pcd.points).size
+
+    return intersection_size / predicted_size >= required_overlap and intersection_size / gt_size >= required_overlap
+

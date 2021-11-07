@@ -6,7 +6,9 @@ import OutlierDetector
 
 from CVATAnnotation import CVATAnnotation
 from src.detectors import AnnotationsDetector, O3DRansacDetector
-from src.metrics.benchmark import benchmark_iou
+from src.metrics.multi_value.MultiValueBenchmark import MultiValueBenchmark
+from src.metrics.one_value.DiceBenchmark import DiceBenchmark
+from src.metrics.one_value.IoUBenchmark import IoUBenchmark
 from src.utils.point_cloud import depth_to_pcd
 
 
@@ -72,7 +74,13 @@ if __name__ == '__main__':
         pcd = depth_to_pcd(depth_image, cam_intrinsic)
         detected_pcd = O3DRansacDetector.detect_planes(pcd)
 
-        benchmark_iou(detected_pcd, result_pcd)
+        iou_benchmark_result = IoUBenchmark().execute(detected_pcd, result_pcd)
+        dice_benchmark_result = DiceBenchmark().execute(detected_pcd, result_pcd)
+        multi_value_benchmark_result = MultiValueBenchmark().execute(detected_pcd, result_pcd)
+
+        print(iou_benchmark_result)
+        print(dice_benchmark_result)
+        print(multi_value_benchmark_result)
     else:
         pcd = depth_to_pcd(depth_image, cam_intrinsic)
         result_pcd = O3DRansacDetector.detect_planes(pcd)
