@@ -25,8 +25,9 @@ class CVATAnnotation:
             planes_track = self.Track()
             for frame in frames:
                 points = parse_points(frame.attrib['points'])
+                frame_id = int(frame.attrib['frame'])
                 plane = self.Plane(points)
-                planes_track.append(plane)
+                planes_track.append(plane, frame_id)
 
             self.tracks.append(planes_track)
 
@@ -34,15 +35,15 @@ class CVATAnnotation:
         return self.tracks[track_id].planes[frame_id]
 
     def get_all_planes_for_frame(self, frame_id):
-        return [track.planes[frame_id] for track in self.tracks]
+        return [track.planes[frame_id] for track in self.tracks if frame_id in track.planes]
 
     class Track:
         def __init__(self):
-            self.planes = []
+            self.planes = {}
             self.color = get_random_color()
 
-        def append(self, plane):
-            self.planes.append(plane)
+        def append(self, plane, frame_id):
+            self.planes[frame_id] = plane
             plane.color = self.color
 
     class Plane:
