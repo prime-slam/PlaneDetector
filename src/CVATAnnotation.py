@@ -26,6 +26,10 @@ class CVATAnnotation:
             for frame in frames:
                 points = parse_points(frame.attrib['points'])
                 frame_id = int(frame.attrib['frame'])
+                is_outside = int(frame.attrib['outside'])
+                if is_outside == 1:
+                    continue
+
                 plane = self.Plane(points)
                 planes_track.append(plane, frame_id)
 
