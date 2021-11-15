@@ -7,7 +7,8 @@ def rgbd_to_pcd(rgbd_image, camera_intrinsics):
         rgbd_image,
         camera_intrinsics
     )
-    pcd.transform([[-1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
+    pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]]) # for TUM
+    # pcd.transform([[-1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]]) # ICL NUIM
     return pcd
 
 
