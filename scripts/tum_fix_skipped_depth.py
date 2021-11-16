@@ -9,12 +9,16 @@ class TumDataset:
         self.path = path
         depth_path = os.path.join(path, "depth")
         self.depth_images = [os.path.join(depth_path, filename) for filename in os.listdir(depth_path)]
+        self.depth_images.sort()
         rgb_path = os.path.join(path, "rgb")
         self.rgb_images = [os.path.join(rgb_path, filename) for filename in os.listdir(rgb_path)]
+        self.rgb_images.sort()
         self.depth_to_rgb_index = []
 
         rgb_filenames = os.listdir(rgb_path)
         depth_filenames = os.listdir(depth_path)
+        rgb_filenames.sort()
+        depth_filenames.sort()
         rgb_index = 0
         depth_index = 0
         prev_delta = float('inf')
