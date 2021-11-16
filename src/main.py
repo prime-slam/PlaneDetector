@@ -7,18 +7,36 @@ import OutlierDetector
 from CVATAnnotation import CVATAnnotation
 from src.config import Tum
 from src.detectors import AnnotationsDetector, O3DRansacDetector
+from src.loaders.tum import TumDataset
 from src.metrics.multi_value.MultiValueBenchmark import MultiValueBenchmark
 from src.metrics.one_value.DiceBenchmark import DiceBenchmark
 from src.metrics.one_value.IoUBenchmark import IoUBenchmark
 from src.utils.point_cloud import depth_to_pcd
 
 
+loaders = {
+    'tum': TumDataset
+}
+
+
 def create_input_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        'depth_path',
+        'loader',
         type=str,
-        help='Path to depth image'
+        choices=['tum', 'icl', 'custom'],
+        help='Name of loader for dataset'
+    )
+    parser.add_argument(
+        'dataset_path',
+        type=str,
+        help='Path to dataset'
+    )
+    parser.add_argument(
+        'frame_num',
+        type=int,
+        default=0,
+        help='Depth frame number in dataset'
     )
     parser.add_argument(
         '--annotations_path',
@@ -44,9 +62,14 @@ def create_input_parser():
 if __name__ == '__main__':
     parser = create_input_parser()
     args = parser.parse_args()
-    path_to_depth = args.depth_path
+    path_to_dataset = args.dataset_path
+    depth_frame_num = args.frame_num
+    loader_name = args.loader
 
-    depth_image = o3d.io.read_image(path_to_depth)
+    loader = loaders[loader_name](path_to_dataset)
+    depth_image_path = loader.depth_images[depth_frame_num]
+
+    depth_image = o3d.io.read_image(depth_image_path)
     result_pcd = None
     image_shape = np.asarray(depth_image).shape
     # Taken from https://www.doc.ic.ac.uk/~ahanda/VaFRIC/codes.html
@@ -54,7 +77,10 @@ if __name__ == '__main__':
 
     path_to_annotations = args.annotations_path
     if path_to_annotations is not None:
-        frame_number = args.annotation_frame_number
+        if loader_name == 'custom':
+            frame_number = args.annotation_frame_number
+        else:
+            frame_number = loader.depth_to_rgb_index[depth_frame_num]
         annotation = CVATAnnotation(path_to_annotations)
         result_pcd = AnnotationsDetector.segment_pcd_from_depth_by_annotations(
             depth_image,
