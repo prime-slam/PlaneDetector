@@ -1,7 +1,11 @@
+from src.loaders.config import IclNuim
 from src.loaders.tum import TumDataset
 
 
 class TumIclDataset(TumDataset):
+    def provide_config(self):
+        return IclNuim
+
     def provide_filenames(self, rgb_path, depth_path):
         rgb_filenames, depth_filenames = super(TumIclDataset, self).provide_filenames(
             rgb_path,

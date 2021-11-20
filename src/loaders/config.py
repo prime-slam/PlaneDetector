@@ -1,9 +1,10 @@
 import open3d as o3d
 
 
-class NclNuim:
+class IclNuim:
     @staticmethod
     def get_cam_intrinsic(image_shape):
+        # Taken from https://www.doc.ic.ac.uk/~ahanda/VaFRIC/codes.html
         return o3d.camera.PinholeCameraIntrinsic(
             width=image_shape[1],
             height=image_shape[0],

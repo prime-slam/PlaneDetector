@@ -8,16 +8,20 @@ This framework has pipeline for plane segmentation in point clouds and some visu
 What is already done:
 * Pipeline for mapping rgb images planes annotations to point cloud and their visualization
 * Plane outliers detection and removing using Open3D RANSAC implementation
+* Basic plane detector algorithm based on Open3D RANSAC
+* Metrics for plane detection: IoU, Dice, classic ones
 
 ## RGB annotations and outliers
 This framework can map annotated rgb images and their depth component to the point cloud.
 
 ### How to use
-Run it with `python main.py [depth_path] [annotations_path] --annotation_frame_number=[frame_number]`, where `depth_path` ---
-path to the depth image, `annotations_path` --- path to `annotations.xml` file and `frame_number` --- number of the frame in annotations for which point cloud is generated (enumeration started from 0)
+Run it with `python main.py [dataset_path] --frame_number=[frame_number] --loader=[loader_name] [--annotations_path=[annotations_path] [--disable_annotation_filter_outliers]] [--algo=[plane_detection_algo_name] [--metric=[metric_name_1] --metric=[metric_name_2] ...]]`, where `dataset_path` ---
+path to the dataset folder, `frame_number` --- number of the frame in dataset (enumeration started from 0),
+`loader_name` --- name of the dataset loader (tum and icl_tum are available), `annotations_path` --- path to `annotations.xml` file,
+`plane_detection_algo_name` --- algorithm to use for detection of planes and `metric_name_X` --- name of the metric to benchmark the chosen algorithm.
 
 #### Example of usage:
-`python main.py C:\depth\0.png C:\Desktop\annotations.xml --annotation_frame_number=0`
+`python main.py C:\dataset --frame_num=0 --loader=icl_tum --annotations_path=C:\annotations.xml`
 
 ### Example:
 | Original depth image     |  Annotated RGB image  |

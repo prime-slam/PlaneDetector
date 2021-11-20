@@ -1,64 +1,27 @@
-import argparse
-
 import numpy as np
 import open3d as o3d
 import OutlierDetector
 
 from CVATAnnotation import CVATAnnotation
-from src.config import Tum, NclNuim
-from src.detectors import AnnotationsDetector, O3DRansacDetector
-from src.loaders.tum import TumDataset
-from src.loaders.tum_icl import TumIclDataset
-from src.metrics.multi_value.MultiValueBenchmark import MultiValueBenchmark
-from src.metrics.one_value.DiceBenchmark import DiceBenchmark
-from src.metrics.one_value.IoUBenchmark import IoUBenchmark
+from src.detectors import AnnotationsDetector
+from src.parser import create_input_parser, loaders, algos, metrics
 from src.utils.point_cloud import depth_to_pcd
 
 
-loaders = {
-    'tum': TumDataset,
-    'icl_tum': TumIclDataset
-}
+def load_annotations(loader, depth_frame_num, path_to_annotations, filter_outliers):
+    frame_number = loader.depth_to_rgb_index[depth_frame_num]
+    annotation = CVATAnnotation(path_to_annotations)
+    result_pcd = AnnotationsDetector.segment_pcd_from_depth_by_annotations(
+        depth_image,
+        cam_intrinsic,
+        initial_pcd_transform,
+        annotation,
+        frame_number
+    )
+    if filter_outliers:
+        result_pcd = OutlierDetector.remove_planes_outliers(result_pcd)
 
-
-def create_input_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        'loader',
-        type=str,
-        choices=['tum', 'icl', 'custom'],
-        help='Name of loader for dataset'
-    )
-    parser.add_argument(
-        'dataset_path',
-        type=str,
-        help='Path to dataset'
-    )
-    parser.add_argument(
-        'frame_num',
-        type=int,
-        default=0,
-        help='Depth frame number in dataset'
-    )
-    parser.add_argument(
-        '--annotations_path',
-        type=str,
-        help='Path to annotations.xml file in "CVAT for video" format'
-    )
-    parser.add_argument(
-        '--annotation_frame_number',
-        type=int,
-        default=0,
-        help='Number of frame in annotations.xml which will be used for annotations extraction. By default first '
-             'frame is used '
-    )
-    parser.add_argument(
-        '--annotation_filter_outliers',
-        action='store_true',
-        help='Specify if you want to remove outliers of you annotated planes with RANSAC'
-    )
-
-    return parser
+    return result_pcd
 
 
 if __name__ == '__main__':
@@ -73,45 +36,23 @@ if __name__ == '__main__':
 
     depth_image = o3d.io.read_image(depth_image_path)
     result_pcd = None
+    detected_pcd = None
     image_shape = np.asarray(depth_image).shape
-    # Taken from https://www.doc.ic.ac.uk/~ahanda/VaFRIC/codes.html
-    cam_intrinsic = NclNuim.get_cam_intrinsic(image_shape)
-    initial_pcd_transform = NclNuim.get_initial_pcd_transform()
+    cam_intrinsic = loader.config.get_cam_intrinsic(image_shape)
+    initial_pcd_transform = loader.config.get_initial_pcd_transform()
 
-    path_to_annotations = args.annotations_path
-    if path_to_annotations is not None:
-        if loader_name == 'custom':
-            frame_number = args.annotation_frame_number
-        else:
-            frame_number = loader.depth_to_rgb_index[depth_frame_num]
-        annotation = CVATAnnotation(path_to_annotations)
-        result_pcd = AnnotationsDetector.segment_pcd_from_depth_by_annotations(
-            depth_image,
-            cam_intrinsic,
-            initial_pcd_transform,
-            annotation,
-            frame_number
-        )
-        if args.annotation_filter_outliers:
-            result_pcd = OutlierDetector.remove_planes_outliers(result_pcd)
-
-        pcd = depth_to_pcd(depth_image, cam_intrinsic, initial_pcd_transform)
-        # detected_pcd = O3DRansacDetector.detect_planes(pcd)
-        #
-        # iou_benchmark_result = IoUBenchmark().execute(detected_pcd, result_pcd)
-        # dice_benchmark_result = DiceBenchmark().execute(detected_pcd, result_pcd)
-        # multi_value_benchmark_result = MultiValueBenchmark().execute(detected_pcd, result_pcd)
-        #
-        # print(iou_benchmark_result)
-        # print(dice_benchmark_result)
-        # print(multi_value_benchmark_result)
-    else:
-        pcd = depth_to_pcd(depth_image, cam_intrinsic)
-        result_pcd = O3DRansacDetector.detect_planes(pcd)
-
-    if result_pcd is None:
-        print("Nothing to visualize!")
-    else:
-        # o3d.visualization.draw_geometries([detected_pcd.get_color_pcd_for_visualization()])
-        o3d.io.write_point_cloud("result.pcd", result_pcd.get_color_pcd_for_visualization())
+    if args.annotations_path is not None:
+        result_pcd = load_annotations(loader, depth_frame_num, args.annotations_path, args.filter_annotation_outliers)
         o3d.visualization.draw_geometries([result_pcd.get_color_pcd_for_visualization()])
+
+    if args.algo is not None:
+        pcd = depth_to_pcd(depth_image, cam_intrinsic, initial_pcd_transform)
+        detector = algos[args.algo]()
+        detected_pcd = detector.detect_planes(pcd)
+        o3d.visualization.draw_geometries([detected_pcd.get_color_pcd_for_visualization()])
+
+    if args.annotations_path is not None and args.algo is not None and len(args.metric) > 0:
+        for metric_name in args.metric:
+            benchmark = metrics[metric_name]()
+            benchmark_result = benchmark.execute(detected_pcd, result_pcd)
+            print(benchmark_result)
