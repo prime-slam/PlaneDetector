@@ -13,6 +13,10 @@ class NclNuim:
             cy=239.50,  # Y-axis principle point
         )
 
+    @staticmethod
+    def get_initial_pcd_transform():
+        return [[-1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]]
+
 
 class Tum:
     @staticmethod
@@ -25,3 +29,7 @@ class Tum:
             cx=331.0,  # X-axis principle point
             cy=234.0,  # Y-axis principle point
         )
+
+    @staticmethod
+    def get_initial_pcd_transform():
+        return [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]]

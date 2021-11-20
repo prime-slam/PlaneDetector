@@ -20,7 +20,13 @@ def group_pcd_indexes_by_color(pcd):
     return result
 
 
-def segment_pcd_from_depth_by_annotations(depth_image, cam_intrinsic, annotation, frame_number) -> SegmentedPointCloud:
+def segment_pcd_from_depth_by_annotations(
+        depth_image,
+        cam_intrinsic,
+        initial_pcd_transform,
+        annotation,
+        frame_number
+) -> SegmentedPointCloud:
     all_planes = annotation.get_all_planes_for_frame(frame_number)
     image_shape = np.asarray(depth_image).shape
     annotated_rgb = draw_polygones(all_planes, image_shape)
@@ -33,7 +39,7 @@ def segment_pcd_from_depth_by_annotations(depth_image, cam_intrinsic, annotation
         depth_trunc=1000.0,
         convert_rgb_to_intensity=False
     )
-    pcd = rgbd_to_pcd(rgbd_image, cam_intrinsic)
+    pcd = rgbd_to_pcd(rgbd_image, cam_intrinsic, initial_pcd_transform)
 
     black_color = np.array([0., 0., 0.])
     black_color_str = color_to_string(black_color)

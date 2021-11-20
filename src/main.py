@@ -8,6 +8,7 @@ from CVATAnnotation import CVATAnnotation
 from src.config import Tum, NclNuim
 from src.detectors import AnnotationsDetector, O3DRansacDetector
 from src.loaders.tum import TumDataset
+from src.loaders.tum_icl import TumIclDataset
 from src.metrics.multi_value.MultiValueBenchmark import MultiValueBenchmark
 from src.metrics.one_value.DiceBenchmark import DiceBenchmark
 from src.metrics.one_value.IoUBenchmark import IoUBenchmark
@@ -15,7 +16,8 @@ from src.utils.point_cloud import depth_to_pcd
 
 
 loaders = {
-    'tum': TumDataset
+    'tum': TumDataset,
+    'icl_tum': TumIclDataset
 }
 
 
@@ -74,6 +76,7 @@ if __name__ == '__main__':
     image_shape = np.asarray(depth_image).shape
     # Taken from https://www.doc.ic.ac.uk/~ahanda/VaFRIC/codes.html
     cam_intrinsic = NclNuim.get_cam_intrinsic(image_shape)
+    initial_pcd_transform = NclNuim.get_initial_pcd_transform()
 
     path_to_annotations = args.annotations_path
     if path_to_annotations is not None:
@@ -85,13 +88,14 @@ if __name__ == '__main__':
         result_pcd = AnnotationsDetector.segment_pcd_from_depth_by_annotations(
             depth_image,
             cam_intrinsic,
+            initial_pcd_transform,
             annotation,
             frame_number
         )
         if args.annotation_filter_outliers:
             result_pcd = OutlierDetector.remove_planes_outliers(result_pcd)
 
-        pcd = depth_to_pcd(depth_image, cam_intrinsic)
+        pcd = depth_to_pcd(depth_image, cam_intrinsic, initial_pcd_transform)
         # detected_pcd = O3DRansacDetector.detect_planes(pcd)
         #
         # iou_benchmark_result = IoUBenchmark().execute(detected_pcd, result_pcd)

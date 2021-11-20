@@ -2,24 +2,23 @@ import open3d as o3d
 import numpy as np
 
 
-def rgbd_to_pcd(rgbd_image, camera_intrinsics):
+def rgbd_to_pcd(rgbd_image, camera_intrinsics, initial_pcd_transform):
     pcd = o3d.geometry.PointCloud.create_from_rgbd_image(
         rgbd_image,
         camera_intrinsics
     )
-    pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]]) # for TUM
-    # pcd.transform([[-1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]]) # ICL NUIM
+    pcd.transform(initial_pcd_transform)
     return pcd
 
 
-def depth_to_pcd(depth_image, camera_intrinsics):
+def depth_to_pcd(depth_image, camera_intrinsics, initial_pcd_transform):
     pcd = o3d.geometry.PointCloud.create_from_depth_image(
         depth_image,
         camera_intrinsics,
         depth_scale=5000.0,
         depth_trunc=1000.0
     )
-    pcd.transform([[-1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
+    pcd.transform(initial_pcd_transform)
     return pcd
 
 
