@@ -5,7 +5,7 @@ import open3d as o3d
 import OutlierDetector
 
 from CVATAnnotation import CVATAnnotation
-from src.config import Tum
+from src.config import Tum, NclNuim
 from src.detectors import AnnotationsDetector, O3DRansacDetector
 from src.loaders.tum import TumDataset
 from src.metrics.multi_value.MultiValueBenchmark import MultiValueBenchmark
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     result_pcd = None
     image_shape = np.asarray(depth_image).shape
     # Taken from https://www.doc.ic.ac.uk/~ahanda/VaFRIC/codes.html
-    cam_intrinsic = Tum.get_cam_intrinsic(image_shape)
+    cam_intrinsic = NclNuim.get_cam_intrinsic(image_shape)
 
     path_to_annotations = args.annotations_path
     if path_to_annotations is not None:
@@ -109,4 +109,5 @@ if __name__ == '__main__':
         print("Nothing to visualize!")
     else:
         # o3d.visualization.draw_geometries([detected_pcd.get_color_pcd_for_visualization()])
+        o3d.io.write_point_cloud("result.pcd", result_pcd.get_color_pcd_for_visualization())
         o3d.visualization.draw_geometries([result_pcd.get_color_pcd_for_visualization()])
