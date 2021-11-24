@@ -5,7 +5,7 @@ from src.SegmentedPlane import SegmentedPlane
 from src.SegmentedPointCloud import SegmentedPointCloud
 from src.utils.annotations import draw_polygones
 from src.utils.colors import color_to_string
-from src.utils.point_cloud import rgbd_to_pcd
+from src.utils.point_cloud import rgbd_to_pcd, rgb_and_depth_to_pcd_custom
 
 
 def group_pcd_indexes_by_color(pcd):
@@ -28,13 +28,18 @@ def segment_pcd_from_depth_by_annotations(
         frame_number
 ) -> SegmentedPointCloud:
     all_planes = annotation.get_all_planes_for_frame(frame_number)
-    image_shape = np.asarray(depth_image).shape
+    image_shape = depth_image.shape
     annotated_rgb = draw_polygones(all_planes, image_shape)
-    color_image = o3d.geometry.Image(annotated_rgb)
 
+    # pcd = rgb_and_depth_to_pcd_custom(
+    #     annotated_rgb,
+    #     depth_image,
+    #     cam_intrinsic,
+    #     initial_pcd_transform
+    # )
     rgbd_image = o3d.geometry.RGBDImage.create_from_color_and_depth(
-        color_image,
-        depth_image,
+        o3d.geometry.Image(annotated_rgb),
+        o3d.geometry.Image(depth_image),
         depth_scale=5000.0,
         depth_trunc=1000.0,
         convert_rgb_to_intensity=False

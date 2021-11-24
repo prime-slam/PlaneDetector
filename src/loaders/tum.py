@@ -8,11 +8,14 @@ class TumDataset:
         self.config = self.provide_config()
 
         rgb_path, depth_path = self.provide_rgb_and_depth_path(path)
-        self.depth_images = [os.path.join(depth_path, filename) for filename in os.listdir(depth_path)]
-        self.rgb_images = [os.path.join(rgb_path, filename) for filename in os.listdir(rgb_path)]
-        self.depth_to_rgb_index = []
 
         rgb_filenames, depth_filenames = self.provide_filenames(rgb_path, depth_path)
+        rgb_filenames.sort()
+        depth_filenames.sort()
+
+        self.depth_images = [os.path.join(depth_path, filename) for filename in depth_filenames]
+        self.rgb_images = [os.path.join(rgb_path, filename) for filename in rgb_filenames]
+        self.depth_to_rgb_index = []
 
         self.match_rgb_with_depth(rgb_filenames, depth_filenames)
 
