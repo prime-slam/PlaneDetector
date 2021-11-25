@@ -4,13 +4,9 @@ import sys
 import cv2
 import numpy as np
 
-from src.loaders.config import Tum
-
 
 class TumDataset:
     def __init__(self, path):
-        self.config = self.provide_config()
-
         rgb_path, depth_path = self.provide_rgb_and_depth_path(path)
 
         rgb_filenames, depth_filenames = self.provide_filenames(rgb_path, depth_path)
@@ -22,9 +18,6 @@ class TumDataset:
         self.depth_to_rgb_index = []
 
         self.match_rgb_with_depth(rgb_filenames, depth_filenames)
-
-    def provide_config(self):
-        return Tum
 
     def provide_rgb_and_depth_path(self, path):
         depth_path = os.path.join(path, "depth")
