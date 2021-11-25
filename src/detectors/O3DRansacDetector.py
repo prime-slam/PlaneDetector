@@ -6,7 +6,7 @@ from src.SegmentedPointCloud import SegmentedPointCloud
 
 def detect_plane(pcd):
     _, inliers = pcd.segment_plane(
-        distance_threshold=0.000001,
+        distance_threshold=0.005,
         ransac_n=3,
         num_iterations=1000
     )

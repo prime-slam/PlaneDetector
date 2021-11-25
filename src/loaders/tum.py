@@ -1,5 +1,6 @@
 import os
 
+import cv2
 from src.loaders.config import Tum
 
 
@@ -33,6 +34,10 @@ class TumDataset:
         depth_filenames = os.listdir(depth_path)
 
         return rgb_filenames, depth_filenames
+
+    def read_depth_image(self, frame_num):
+        depth_frame_path = self.depth_images[frame_num]
+        return cv2.imread(depth_frame_path, cv2.IMREAD_ANYDEPTH)
 
     def match_rgb_with_depth(self, rgb_filenames, depth_filenames):
         rgb_index = 0

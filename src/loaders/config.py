@@ -51,4 +51,4 @@ class Tum:
 
     @staticmethod
     def get_initial_pcd_transform():
-        return [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]]
+        return [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]

@@ -31,20 +31,20 @@ def segment_pcd_from_depth_by_annotations(
     image_shape = depth_image.shape
     annotated_rgb = draw_polygones(all_planes, image_shape)
 
-    # pcd = rgb_and_depth_to_pcd_custom(
-    #     annotated_rgb,
-    #     depth_image,
-    #     cam_intrinsic,
-    #     initial_pcd_transform
-    # )
-    rgbd_image = o3d.geometry.RGBDImage.create_from_color_and_depth(
-        o3d.geometry.Image(annotated_rgb),
-        o3d.geometry.Image(depth_image),
-        depth_scale=5000.0,
-        depth_trunc=1000.0,
-        convert_rgb_to_intensity=False
+    pcd = rgb_and_depth_to_pcd_custom(
+        annotated_rgb,
+        depth_image,
+        cam_intrinsic,
+        initial_pcd_transform
     )
-    pcd = rgbd_to_pcd(rgbd_image, cam_intrinsic, initial_pcd_transform)
+    # rgbd_image = o3d.geometry.RGBDImage.create_from_color_and_depth(
+    #     o3d.geometry.Image(annotated_rgb),
+    #     o3d.geometry.Image(depth_image),
+    #     depth_scale=5000.0,
+    #     depth_trunc=1000.0,
+    #     convert_rgb_to_intensity=False
+    # )
+    # pcd = rgbd_to_pcd(rgbd_image, cam_intrinsic, initial_pcd_transform)
 
     black_color = np.array([0., 0., 0.])
     black_color_str = color_to_string(black_color)

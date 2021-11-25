@@ -25,6 +25,17 @@ def load_annotations(loader, depth_frame_num, path_to_annotations, filter_outlie
     return result_pcd
 
 
+def pick_and_print_point(pcd: o3d.geometry.PointCloud):
+    pts = np.asarray(pcd.points)
+    vis = o3d.visualization.VisualizerWithEditing()
+    vis.create_window()
+    vis.add_geometry(pcd)
+    vis.run()  # user picks points
+    vis.destroy_window()
+    picked = vis.get_picked_points()
+    print(pts[picked[0]])
+
+
 if __name__ == '__main__':
     parser = create_input_parser()
     args = parser.parse_args()
@@ -35,7 +46,7 @@ if __name__ == '__main__':
     loader = loaders[loader_name](path_to_dataset)
     depth_image_path = loader.depth_images[depth_frame_num]
 
-    depth_image = cv2.imread(depth_image_path, cv2.IMREAD_GRAYSCALE)
+    depth_image = loader.read_depth_image(depth_frame_num)
     result_pcd = None
     detected_pcd = None
     image_shape = depth_image.shape
@@ -44,10 +55,11 @@ if __name__ == '__main__':
 
     if args.annotations_path is not None:
         result_pcd = load_annotations(loader, depth_frame_num, args.annotations_path, args.filter_annotation_outliers)
+        pick_and_print_point(result_pcd.get_color_pcd_for_visualization())
         o3d.visualization.draw_geometries([result_pcd.get_color_pcd_for_visualization()])
 
     if args.algo is not None:
-        pcd = depth_to_pcd(o3d.io.read_image(depth_image_path), cam_intrinsic, initial_pcd_transform)
+        pcd = depth_to_pcd(depth_image, cam_intrinsic, initial_pcd_transform)
         detector = algos[args.algo]
         detected_pcd = detector.detect_planes(pcd)
         o3d.visualization.draw_geometries([detected_pcd.get_color_pcd_for_visualization()])
