@@ -3,6 +3,7 @@ import numpy as np
 
 from src.SegmentedPlane import SegmentedPlane
 from src.SegmentedPointCloud import SegmentedPointCloud
+from src.output.PointCloudPrinter import PointCloudPrinter
 from src.utils.annotations import draw_polygones
 from src.utils.colors import color_to_string
 from src.utils.point_cloud import rgbd_to_pcd, rgb_and_depth_to_pcd_custom
@@ -37,6 +38,7 @@ def segment_pcd_from_depth_by_annotations(
         cam_intrinsic,
         initial_pcd_transform
     )
+    PointCloudPrinter(pcd).save_to_ply("result.ply")
     # rgbd_image = o3d.geometry.RGBDImage.create_from_color_and_depth(
     #     o3d.geometry.Image(annotated_rgb),
     #     o3d.geometry.Image(depth_image),

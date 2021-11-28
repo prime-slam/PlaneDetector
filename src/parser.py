@@ -1,6 +1,6 @@
 import argparse
 
-from src.detectors import O3DRansacDetector
+from src.detectors import O3DRansacDetector, DDPFFDetector
 from src.loaders.tum import TumDataset
 from src.loaders.tum_icl import TumIclDataset
 from src.metrics.multi_value.MultiValueBenchmark import MultiValueBenchmark
@@ -13,7 +13,8 @@ loaders = {
 }
 
 algos = {
-    'RANSAC-o3d': O3DRansacDetector
+    'RANSAC-o3d': O3DRansacDetector,
+    'DDPFF': DDPFFDetector
 }
 
 metrics = {
