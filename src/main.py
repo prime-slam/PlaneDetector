@@ -5,6 +5,7 @@ import OutlierDetector
 
 from CVATAnnotation import CVATAnnotation
 from src.detectors import AnnotationsDetector
+from src.output.PointCloudPrinter import PointCloudPrinter
 from src.parser import create_input_parser, loaders, algos, metrics
 from src.utils.point_cloud import depth_to_pcd
 
@@ -55,8 +56,9 @@ if __name__ == '__main__':
 
     if args.annotations_path is not None:
         result_pcd = load_annotations(loader, depth_frame_num, args.annotations_path, args.filter_annotation_outliers)
-        pick_and_print_point(result_pcd.get_color_pcd_for_visualization())
         o3d.visualization.draw_geometries([result_pcd.get_color_pcd_for_visualization()])
+        PointCloudPrinter(result_pcd.get_color_pcd_for_visualization()).save_to_ply("result.ply")
+        PointCloudPrinter(result_pcd.get_color_pcd_for_visualization()).save_to_pcd("result.pcd")
 
     if args.algo is not None:
         pcd = depth_to_pcd(depth_image, cam_intrinsic, initial_pcd_transform)

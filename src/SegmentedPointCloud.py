@@ -13,7 +13,7 @@ class SegmentedPointCloud:
         if unsegmented_cloud is None:
             unsegmented_cloud = o3d.geometry.PointCloud()
         self.unsegmented_cloud = unsegmented_cloud
-        self.unsegmented_cloud.paint_uniform_color([0., 0., 0.])
+        self.unsegmented_cloud.paint_uniform_color([0.5, 0.5, 0.5])
 
     def __repr__(self):
         return "Cloud: {{planes: {0}, unsegmented_cloud: {1}}}".format(self.planes, self.unsegmented_cloud)

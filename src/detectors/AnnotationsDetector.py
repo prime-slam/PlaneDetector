@@ -38,7 +38,6 @@ def segment_pcd_from_depth_by_annotations(
         cam_intrinsic,
         initial_pcd_transform
     )
-    PointCloudPrinter(pcd).save_to_ply("result.ply")
     # rgbd_image = o3d.geometry.RGBDImage.create_from_color_and_depth(
     #     o3d.geometry.Image(annotated_rgb),
     #     o3d.geometry.Image(depth_image),
