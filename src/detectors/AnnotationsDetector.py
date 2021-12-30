@@ -52,12 +52,22 @@ def segment_pcd_from_depth_by_annotations(
     planes_indexes = group_pcd_indexes_by_color(pcd)
 
     planes = []
+    next_track_id = 0
+    track_colors = {}
     unsegmented_cloud = None
     for color_str, indexes in planes_indexes.items():
         extracted_pcd = pcd.select_by_index(indexes)
-        if color_str.decode('UTF-8') == black_color_str:
+        color_decoded = color_str.decode('UTF-8')
+        if color_decoded == black_color_str:
             unsegmented_cloud = extracted_pcd
         else:
-            planes.append(SegmentedPlane(extracted_pcd))
+            if color_decoded in track_colors:
+                track_id = track_colors[color_decoded]
+            else:
+                track_id = next_track_id
+                track_colors[color_decoded] = track_id
+                next_track_id += 1
+
+            planes.append(SegmentedPlane(extracted_pcd, track_id))
 
     return SegmentedPointCloud(planes, unsegmented_cloud)

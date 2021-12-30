@@ -13,7 +13,7 @@ def detect_planes(pcd: o3d.geometry.PointCloud) -> SegmentedPointCloud:
             indices = [int(index) for index in line.split(" ")[:-1]]
             all_plane_indices.update(indices)
             plane_pcd = pcd.select_by_index(np.asarray(indices))
-            planes.append(SegmentedPlane(plane_pcd))
+            planes.append(SegmentedPlane(plane_pcd, SegmentedPlane.NO_TRACK))
 
         outlier_pcd = pcd.select_by_index(np.asarray(list(all_plane_indices)), invert=True)
 

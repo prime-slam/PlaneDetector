@@ -21,6 +21,6 @@ def detect_planes(pcd: o3d.geometry.PointCloud, num_planes=5) -> SegmentedPointC
 
     for _ in range(num_planes):
         inlier_pcd, outlier_pcd = detect_plane(outlier_pcd)
-        detected_planes.append(SegmentedPlane(inlier_pcd))
+        detected_planes.append(SegmentedPlane(inlier_pcd, SegmentedPlane.NO_TRACK))
 
     return SegmentedPointCloud(detected_planes, outlier_pcd)
