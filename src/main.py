@@ -63,8 +63,8 @@ def process_frame(depth_frame_num: int, args):
             initial_pcd_transform,
             args.filter_annotation_outliers
         )
-        PointCloudPrinter(result_pcd.get_color_pcd_for_visualization()).save_to_ply("result.ply")
-        PointCloudPrinter(result_pcd.get_color_pcd_for_visualization()).save_to_pcd("result.pcd")
+        # PointCloudPrinter(result_pcd.get_color_pcd_for_visualization()).save_to_ply("result.ply")
+        # PointCloudPrinter(result_pcd.get_color_pcd_for_visualization()).save_to_pcd("result.pcd")
 
     if args.algo is not None:
         pcd = depth_to_pcd(depth_image, cam_intrinsic, initial_pcd_transform)

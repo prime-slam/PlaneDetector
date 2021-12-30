@@ -25,6 +25,7 @@ def depth_to_pcd(depth_image, camera_intrinsics: CameraIntrinsics, initial_pcd_t
     return pcd
 
 
+# TODO: vectorize and create segmentedpoint cloud  instead of o3d pcd
 def rgb_and_depth_to_pcd_custom(rgb_image, depth_image, camera_intrinsics: CameraIntrinsics, initial_pcd_transform):
     factor = 5000  # for the 16-bit PNG files
     colors = np.zeros((camera_intrinsics.width * camera_intrinsics.height, 3))
