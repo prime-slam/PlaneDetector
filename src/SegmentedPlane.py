@@ -7,10 +7,13 @@ class SegmentedPlane:
 
     NO_TRACK = -1
 
-    def __init__(self, pcd: o3d.geometry.PointCloud, track_id: int):
+    def __init__(self, pcd: o3d.geometry.PointCloud, track_id: int, color=None):
         self.pcd = pcd
         self.track_id = track_id
-        self.color = get_random_color()
+        if color is None:
+            self.color = get_random_color()
+        else:
+            self.color = color
         self.normalized_color = normalize_color(self.color)
         pcd.paint_uniform_color(self.normalized_color)
 

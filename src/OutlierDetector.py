@@ -9,6 +9,6 @@ def remove_planes_outliers(segmented_pcd: SegmentedPointCloud) -> SegmentedPoint
     for plane in segmented_pcd.planes:
         inlier_pcd, outlier_pcd = detect_plane(plane.pcd)
         updated_unsegmented_pcd = merge_pcd(updated_unsegmented_pcd, outlier_pcd)
-        updated_planes.append(SegmentedPlane(inlier_pcd, plane.track_id))
+        updated_planes.append(SegmentedPlane(inlier_pcd, plane.track_id, plane.color))
 
     return SegmentedPointCloud(updated_planes, updated_unsegmented_pcd)

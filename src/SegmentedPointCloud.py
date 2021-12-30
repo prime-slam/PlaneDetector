@@ -21,6 +21,7 @@ class SegmentedPointCloud:
     def get_color_pcd_for_visualization(self):
         res = self.unsegmented_cloud
         for plane in self.planes:
+            plane.pcd.paint_uniform_color(plane.normalized_color)
             res = merge_pcd(res, plane.pcd)
 
         return res

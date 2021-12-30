@@ -9,6 +9,10 @@ def normalize_color(color):
     return tuple([channel / 255 for channel in color])
 
 
+def denormalize_color(color):
+    return tuple([channel * 255 for channel in color])
+
+
 def get_random_normalized_color():
     return normalize_color(get_random_color())
 
