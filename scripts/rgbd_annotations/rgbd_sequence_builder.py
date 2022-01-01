@@ -58,7 +58,7 @@ if __name__ == "__main__":
         # If have previous range then fix it to exclude this range
         if len(annotations_ranges) > 0:
             last_annotation_range = annotations_ranges[-1]
-            annotations_ranges[-1] = (last_annotation_range[0], min(last_annotation_range[1], annotation.min_frame_id - 1))
+            annotations_ranges[-1] = (last_annotation_range[0], min(last_annotation_range[1], annotation.max_frame_id - 1))
 
         annotations_ranges.append((annotation.min_frame_id, annotation.max_frame_id))
 
