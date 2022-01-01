@@ -1,7 +1,7 @@
 import numpy as np
 import open3d as o3d
 
-from src.SegmentedPlane import SegmentedPlane
+from src.model.SegmentedPlane import SegmentedPlane
 
 
 def planes_intersection_pcd(plane_left: SegmentedPlane, plane_right: SegmentedPlane) -> o3d.geometry.PointCloud:

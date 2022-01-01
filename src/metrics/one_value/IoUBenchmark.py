@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.SegmentedPlane import SegmentedPlane
+from src.model.SegmentedPlane import SegmentedPlane
 from src.metrics.one_value.OneValueBenchmark import OneValueBenchmark
 from src.utils.metrics import planes_union_pcd, planes_intersection_pcd
 

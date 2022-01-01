@@ -42,7 +42,7 @@ def add_dataset_args(parser):
         type=int,
         required=True,
         default=0,
-        help='Depth frame number in dataset'
+        help='Depth frame number in dataset to start from'
     )
 
     return parser

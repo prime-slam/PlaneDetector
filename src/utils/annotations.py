@@ -4,7 +4,8 @@ import cv2
 
 def draw_polygone(image, plane):
     contours = np.array(plane.points)
-    cv2.fillPoly(image, pts=np.int32([contours]), color=plane.color)
+    color_tuple = tuple([int(part) for part in plane.color])
+    cv2.fillPoly(image, pts=np.int32([contours]), color=color_tuple)
     return image
 
 

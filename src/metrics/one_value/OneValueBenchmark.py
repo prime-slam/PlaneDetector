@@ -2,8 +2,8 @@ from abc import abstractmethod, ABC
 
 import numpy as np
 
-from src.SegmentedPlane import SegmentedPlane
-from src.SegmentedPointCloud import SegmentedPointCloud
+from src.model.SegmentedPlane import SegmentedPlane
+from src.model.SegmentedPointCloud import SegmentedPointCloud
 
 
 class OneValueBenchmarkResult:

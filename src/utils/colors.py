@@ -2,15 +2,15 @@ import numpy as np
 
 
 def get_random_color():
-    return tuple([int(x) for x in np.random.choice(range(256), size=3)])
+    return np.asarray([int(x) for x in np.random.choice(range(256), size=3)])
 
 
 def normalize_color(color):
-    return tuple([channel / 255 for channel in color])
+    return np.asarray([channel / 255 for channel in color])
 
 
 def denormalize_color(color):
-    return tuple([channel * 255 for channel in color])
+    return np.round(np.asarray([channel * 255 for channel in color]))
 
 
 def get_random_normalized_color():

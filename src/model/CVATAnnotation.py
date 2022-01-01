@@ -19,6 +19,8 @@ class CVATAnnotation:
         tracks = [child for child in root.iterchildren()][2:]
 
         self.tracks = []
+        self.min_frame_id = None
+        self.max_frame_id = None
 
         for track in tracks:
             frames = track.getchildren()
@@ -26,6 +28,12 @@ class CVATAnnotation:
             for frame in frames:
                 points = parse_points(frame.attrib['points'])
                 frame_id = int(frame.attrib['frame'])
+
+                if self.min_frame_id is None or frame_id < self.min_frame_id:
+                    self.min_frame_id = frame_id
+                if self.max_frame_id is None or frame_id > self.max_frame_id:
+                    self.max_frame_id = frame_id
+
                 is_outside = int(frame.attrib['outside'])
                 if is_outside == 1:
                     continue

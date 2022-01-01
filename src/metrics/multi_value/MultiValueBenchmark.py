@@ -1,4 +1,4 @@
-from src.SegmentedPointCloud import SegmentedPointCloud
+from src.model.SegmentedPointCloud import SegmentedPointCloud
 from src.utils.metrics import are_nearly_overlapped
 
 

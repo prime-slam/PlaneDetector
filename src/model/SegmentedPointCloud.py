@@ -1,7 +1,6 @@
 import open3d as o3d
 
-from src.SegmentedPlane import SegmentedPlane
-from src.utils.point_cloud import merge_pcd
+from src.model.SegmentedPlane import SegmentedPlane
 
 
 class SegmentedPointCloud:
@@ -22,6 +21,6 @@ class SegmentedPointCloud:
         res = self.unsegmented_cloud
         for plane in self.planes:
             plane.pcd.paint_uniform_color(plane.normalized_color)
-            res = merge_pcd(res, plane.pcd)
+            res += plane.pcd
 
         return res

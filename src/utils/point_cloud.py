@@ -1,8 +1,9 @@
 import open3d as o3d
 import numpy as np
 
+from src.model.SegmentedPointCloud import SegmentedPointCloud
 from src.loaders.config import CameraIntrinsics
-from src.utils.colors import normalize_color
+from src.utils.colors import normalize_color, denormalize_color
 
 
 def rgbd_to_pcd(rgbd_image, camera_intrinsics: CameraIntrinsics, initial_pcd_transform):
@@ -33,7 +34,7 @@ def rgb_and_depth_to_pcd_custom(rgb_image, depth_image, camera_intrinsics: Camer
     for u in range(0, camera_intrinsics.width):
         for v in range(0, camera_intrinsics.height):
             number = v * camera_intrinsics.width + u
-            colors[number] = np.asarray(normalize_color(rgb_image[v, u]))
+            colors[number] = normalize_color(rgb_image[v, u])
             points[number, 2] = depth_image[v, u] / factor
             points[number, 0] = (u - camera_intrinsics.cx) * points[number, 2] / camera_intrinsics.fx
             points[number, 1] = (v - camera_intrinsics.cy) * points[number, 2] / camera_intrinsics.fy
@@ -44,15 +45,21 @@ def rgb_and_depth_to_pcd_custom(rgb_image, depth_image, camera_intrinsics: Camer
     return pcd
 
 
-def merge_pcd(pcd_left, pcd_right):
-    pcd_left_points = np.asarray(pcd_left.points)
-    pcd_right_points = np.asarray(pcd_right.points)
-    pcd_res_points = np.concatenate((pcd_left_points, pcd_right_points), axis=0)
-    pcd_left_colors = np.asarray(pcd_left.colors)
-    pcd_right_colors = np.asarray(pcd_right.colors)
-    pcd_res_colors = np.concatenate((pcd_left_colors, pcd_right_colors), axis=0)
-    pcd_res = o3d.geometry.PointCloud()
-    pcd_res.points = o3d.utility.Vector3dVector(pcd_res_points)
-    pcd_res.colors = o3d.utility.Vector3dVector(pcd_res_colors)
+# TODO: vectorize and create segmented point cloud  nstead of o3d pcd
+def pcd_to_rgb_and_depth_custom(pcd: o3d.geometry.PointCloud, camera_intrinsics: CameraIntrinsics, initial_pcd_transform):
+    rgb_image = np.zeros((camera_intrinsics.height, camera_intrinsics.width, 3), dtype=np.uint8)
+    depth_image = np.zeros((camera_intrinsics.height, camera_intrinsics.width), dtype=np.uint16)
+    factor = 5000  # for the 16-bit PNG files
+    inverted_transform = np.linalg.inv(initial_pcd_transform)
+    pcd.transform(inverted_transform)
+    colors = np.asarray(pcd.colors)
+    points = np.asarray(pcd.points)
 
-    return pcd_res
+    for index, point in enumerate(points):
+        u = round(point[0] * camera_intrinsics.fx / point[2] + camera_intrinsics.cx)
+        v = round(point[1] * camera_intrinsics.fy / point[2] + camera_intrinsics.cy)
+
+        rgb_image[v, u] = denormalize_color(colors[index])
+        depth_image[v, u] = point[2] * factor
+
+    return rgb_image, depth_image

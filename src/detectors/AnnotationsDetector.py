@@ -1,12 +1,10 @@
-import open3d as o3d
 import numpy as np
 
-from src.SegmentedPlane import SegmentedPlane
-from src.SegmentedPointCloud import SegmentedPointCloud
-from src.output.PointCloudPrinter import PointCloudPrinter
+from src.model.SegmentedPlane import SegmentedPlane
+from src.model.SegmentedPointCloud import SegmentedPointCloud
 from src.utils.annotations import draw_polygones
 from src.utils.colors import color_to_string, color_from_string, denormalize_color
-from src.utils.point_cloud import rgbd_to_pcd, rgb_and_depth_to_pcd_custom
+from src.utils.point_cloud import rgb_and_depth_to_pcd_custom
 
 
 def group_pcd_indexes_by_color(pcd):
