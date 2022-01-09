@@ -3,7 +3,7 @@ import numpy as np
 
 from src.model.SegmentedPointCloud import SegmentedPointCloud
 from src.loaders.config import CameraIntrinsics
-from src.utils.colors import normalize_color, denormalize_color
+from src.utils.colors import normalize_color, denormalize_color, normalize_color_arr
 
 
 def rgbd_to_pcd(rgbd_image, camera_intrinsics: CameraIntrinsics, initial_pcd_transform):
@@ -26,18 +26,19 @@ def depth_to_pcd(depth_image, camera_intrinsics: CameraIntrinsics, initial_pcd_t
     return pcd
 
 
-# TODO: vectorize and create segmentedpoint cloud  instead of o3d pcd
+# TODO: create segmentedpoint cloud instead of o3d pcd
 def rgb_and_depth_to_pcd_custom(rgb_image, depth_image, camera_intrinsics: CameraIntrinsics, initial_pcd_transform):
     factor = 5000  # for the 16-bit PNG files
-    colors = np.zeros((camera_intrinsics.width * camera_intrinsics.height, 3))
     points = np.zeros((camera_intrinsics.width * camera_intrinsics.height, 3))
-    for u in range(0, camera_intrinsics.width):
-        for v in range(0, camera_intrinsics.height):
-            number = v * camera_intrinsics.width + u
-            colors[number] = normalize_color(rgb_image[v, u])
-            points[number, 2] = depth_image[v, u] / factor
-            points[number, 0] = (u - camera_intrinsics.cx) * points[number, 2] / camera_intrinsics.fx
-            points[number, 1] = (v - camera_intrinsics.cy) * points[number, 2] / camera_intrinsics.fy
+
+    column_indices = np.tile(np.arange(camera_intrinsics.width), (camera_intrinsics.height, 1)).flatten()
+    row_indices = np.transpose(np.tile(np.arange(camera_intrinsics.height), (camera_intrinsics.width, 1))).flatten()
+
+    colors = normalize_color_arr(rgb_image.reshape(camera_intrinsics.width * camera_intrinsics.height, 3))
+    points[:, 2] = depth_image.flatten() / factor
+    points[:, 0] = (column_indices - camera_intrinsics.cx) * points[:, 2] / camera_intrinsics.fx
+    points[:, 1] = (row_indices - camera_intrinsics.cy) * points[:, 2] / camera_intrinsics.fy
+
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(points)
     pcd.colors = o3d.utility.Vector3dVector(colors)
@@ -45,7 +46,7 @@ def rgb_and_depth_to_pcd_custom(rgb_image, depth_image, camera_intrinsics: Camer
     return pcd
 
 
-# TODO: vectorize and create segmented point cloud  nstead of o3d pcd
+# TODO: vectorize and create segmented point cloud instead of o3d pcd
 def pcd_to_rgb_and_depth_custom(pcd: o3d.geometry.PointCloud, camera_intrinsics: CameraIntrinsics, initial_pcd_transform):
     rgb_image = np.zeros((camera_intrinsics.height, camera_intrinsics.width, 3), dtype=np.uint8)
     depth_image = np.zeros((camera_intrinsics.height, camera_intrinsics.width), dtype=np.uint16)

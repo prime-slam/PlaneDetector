@@ -9,6 +9,10 @@ def normalize_color(color):
     return np.asarray([channel / 255 for channel in color])
 
 
+def normalize_color_arr(color_arr):
+    return color_arr / 255
+
+
 def denormalize_color(color):
     return np.round(np.asarray([channel * 255 for channel in color]))
 
