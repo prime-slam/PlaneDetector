@@ -46,21 +46,24 @@ def rgb_and_depth_to_pcd_custom(rgb_image, depth_image, camera_intrinsics: Camer
     return pcd
 
 
-# TODO: vectorize and create segmented point cloud instead of o3d pcd
 def pcd_to_rgb_and_depth_custom(pcd: o3d.geometry.PointCloud, camera_intrinsics: CameraIntrinsics, initial_pcd_transform):
-    rgb_image = np.zeros((camera_intrinsics.height, camera_intrinsics.width, 3), dtype=np.uint8)
-    depth_image = np.zeros((camera_intrinsics.height, camera_intrinsics.width), dtype=np.uint16)
+    # rgb_image = np.zeros((camera_intrinsics.height, camera_intrinsics.width, 3), dtype=np.uint8)
+    # depth_image = np.zeros((camera_intrinsics.height, camera_intrinsics.width), dtype=np.uint16)
     factor = 5000  # for the 16-bit PNG files
     inverted_transform = np.linalg.inv(initial_pcd_transform)
     pcd.transform(inverted_transform)
     colors = np.asarray(pcd.colors)
     points = np.asarray(pcd.points)
 
-    for index, point in enumerate(points):
-        u = round(point[0] * camera_intrinsics.fx / point[2] + camera_intrinsics.cx)
-        v = round(point[1] * camera_intrinsics.fy / point[2] + camera_intrinsics.cy)
-
-        rgb_image[v, u] = denormalize_color(colors[index])
-        depth_image[v, u] = point[2] * factor
+    # This works with knowledge that pcd is never permuted in all processing
+    # and its order is the same as after rgb_and_depth_to_pcd_custom --- so we can simply reshape to images
+    rgb_image = (colors.reshape((camera_intrinsics.height, camera_intrinsics.width, 3)) * 255).astype(dtype=np.uint8)
+    depth_image = (points[:, 2].reshape((camera_intrinsics.height, camera_intrinsics.width)) * factor).astype(dtype=np.uint16)
+    # for index, point in enumerate(points):
+    #     u = round(point[0] * camera_intrinsics.fx / point[2] + camera_intrinsics.cx)
+    #     v = round(point[1] * camera_intrinsics.fy / point[2] + camera_intrinsics.cy)
+    #
+    #     rgb_image[v, u] = denormalize_color(colors[index])
+    #     depth_image[v, u] = point[2] * factor
 
     return rgb_image, depth_image
