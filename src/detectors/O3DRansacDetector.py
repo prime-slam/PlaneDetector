@@ -1,3 +1,4 @@
+import numpy as np
 import open3d as o3d
 
 from src.model.SegmentedPlane import SegmentedPlane
@@ -10,17 +11,34 @@ def detect_plane(pcd):
         ransac_n=3,
         num_iterations=1000
     )
-    inlier_cloud = pcd.select_by_index(inliers)
-    outlier_cloud = pcd.select_by_index(inliers, invert=True)
-    return inlier_cloud, outlier_cloud
+    inliers = np.asarray(inliers)
+    outliers = np.setdiff1d(
+        np.arange(np.asarray(pcd.points).shape[0]),
+        inliers
+    )
+    return inliers, outliers
 
 
 def detect_planes(pcd: o3d.geometry.PointCloud, num_planes=5) -> SegmentedPointCloud:
     outlier_pcd = pcd
     detected_planes = []
+    detected_indices = []
+    all_indices = np.arange(np.asarray(pcd.points).shape[0])
 
     for _ in range(num_planes):
-        inlier_pcd, outlier_pcd = detect_plane(outlier_pcd)
-        detected_planes.append(SegmentedPlane(inlier_pcd, SegmentedPlane.NO_TRACK))
+        inliers, outliers = detect_plane(outlier_pcd)  # indices in small pcd with some detached planes
+        inlier_indices = all_indices[inliers]  # map local indices to global ones
+        all_indices = np.setdiff1d(  # it will work only if setdiff1d doesn't change order in all_indices
+            all_indices,             # we update all indices and now they contain only outliers indices
+            inlier_indices           # but in global index system
+        )
+        outlier_pcd = outlier_pcd.select_by_index(outliers)
+        detected_planes.append(SegmentedPlane(inlier_indices, SegmentedPlane.NO_TRACK))
+        detected_indices.append(inlier_indices)
 
-    return SegmentedPointCloud(detected_planes, outlier_pcd)
+    outlier_indices = np.setdiff1d(
+        np.arange(np.asarray(pcd.points).shape[0]),
+        np.concatenate(detected_indices)
+    )
+
+    return SegmentedPointCloud(pcd, detected_planes, outlier_indices)

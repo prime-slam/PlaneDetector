@@ -1,3 +1,4 @@
+import numpy as np
 import open3d as o3d
 
 from src.model.SegmentedPlane import SegmentedPlane
@@ -5,23 +6,38 @@ from src.model.SegmentedPlane import SegmentedPlane
 
 class SegmentedPointCloud:
 
-    def __init__(self, planes: [SegmentedPlane] = None, unsegmented_cloud: o3d.geometry.PointCloud = None):
+    UNSEGMENTED_PCD_COLOR = [0, 0, 0]  # [0.5, 0.5, 0.5]
+
+    def __init__(
+            self,
+            pcd: o3d.geometry.PointCloud,
+            planes: [SegmentedPlane] = None,
+            unsegmented_cloud_indices: np.array = None,
+    ):
+        if pcd is None:
+            pcd = o3d.geometry.PointCloud()
+        self.pcd = pcd
         if planes is None:
             planes = []
         self.planes = planes
-        if unsegmented_cloud is None:
-            unsegmented_cloud = o3d.geometry.PointCloud()
-        self.unsegmented_cloud = unsegmented_cloud
-        # self.unsegmented_cloud.paint_uniform_color([0.5, 0.5, 0.5])
-        self.unsegmented_cloud.paint_uniform_color([0, 0, 0])
+        if unsegmented_cloud_indices is None:
+            unsegmented_cloud_indices = np.asarray([])
+        self.unsegmented_cloud_indices = unsegmented_cloud_indices
 
     def __repr__(self):
-        return "Cloud: {{planes: {0}, unsegmented_cloud: {1}}}".format(self.planes, self.unsegmented_cloud)
+        return "Cloud: {{planes: {0}, unsegmented_cloud_indices: {1}, pcd: {2}}}".format(
+            self.planes,
+            self.unsegmented_cloud_indices,
+            self.pcd
+        )
 
     def get_color_pcd_for_visualization(self):
-        res = self.unsegmented_cloud
+        colors = np.asarray(self.pcd.colors)
+        colors[self.unsegmented_cloud_indices] = SegmentedPointCloud.UNSEGMENTED_PCD_COLOR
         for plane in self.planes:
-            plane.pcd.paint_uniform_color(plane.normalized_color)
-            res += plane.pcd
+            color = plane.normalized_color
+            colors[plane.pcd_indices] = color
 
-        return res
+        self.pcd.colors = o3d.utility.Vector3dVector(colors)
+
+        return self.pcd
