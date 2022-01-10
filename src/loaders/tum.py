@@ -48,7 +48,7 @@ class TumDataset:
             depth_timestamp = float(depth_filenames[depth_index][:-4])
             delta = abs(depth_timestamp - rgb_timestamp)
 
-            if rgb_timestamp <= depth_timestamp:
+            if rgb_timestamp < depth_timestamp:
                 prev_delta = delta
                 rgb_index += 1
                 continue
