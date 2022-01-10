@@ -14,7 +14,8 @@ from src.utils.point_cloud import pcd_to_rgb_and_depth_custom
 
 def update_track_indices(pcd: SegmentedPointCloud, matches: dict):
     for plane in pcd.planes:
-        plane.track_id = matches[plane.track_id]
+        if plane.track_id in matches:
+            plane.track_id = matches[plane.track_id]
 
 
 def update_planes_colors(result_pcd: SegmentedPointCloud, track_to_color: dict) -> dict:
