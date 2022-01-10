@@ -17,6 +17,16 @@ def update_track_indices(pcd: SegmentedPointCloud, matches: dict):
         plane.track_id = matches[plane.track_id]
 
 
+def update_planes_colors(result_pcd: SegmentedPointCloud, track_to_color: dict) -> dict:
+    for plane in result_pcd.planes:
+        if plane.track_id in track_to_color:
+            plane.set_color(track_to_color[plane.track_id])
+        else:
+            track_to_color[plane.track_id] = plane.color
+
+    return track_to_color
+
+
 def save_frame(
         pcd: SegmentedPointCloud,
         frame_num: int,
@@ -71,6 +81,8 @@ if __name__ == "__main__":
     track_indices_matches = None
     previous_pcd = None
 
+    track_to_color = {}
+
     for frame_num in range(start_depth_frame_num, len(loader.depth_images)):
         annotation_index = None
         for index, annotation_range in enumerate(annotations_ranges):
@@ -96,6 +108,8 @@ if __name__ == "__main__":
             track_indices_matches = associate_segmented_point_clouds(previous_pcd, result_pcd)
         elif track_indices_matches is not None:
             update_track_indices(result_pcd, track_indices_matches)
+
+        track_to_color = update_planes_colors(result_pcd, track_to_color)
 
         previous_pcd = result_pcd
 

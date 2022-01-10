@@ -12,11 +12,13 @@ class SegmentedPlane:
         self.pcd_indices = pcd_indices
         self.track_id = track_id
         if color is None:
-            self.color = get_random_color()
-        else:
-            self.color = color
+            color = get_random_color()
+        self.color = color
         self.normalized_color = normalize_color(self.color)
-        # pcd.paint_uniform_color(self.normalized_color)
+
+    def set_color(self, color):
+        self.color = color
+        self.normalized_color = normalize_color(self.color)
 
     def __repr__(self):
         return "Plane: {{pcd_indices: {0}, color: {1}, track_id: {2}}}".format(self.pcd_indices, self.color, self.track_id)

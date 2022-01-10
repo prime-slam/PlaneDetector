@@ -20,7 +20,7 @@ def group_pcd_indexes_by_color(pcd):
 
 
 next_track_id = 0
-track_colors = {}
+color_to_track = {}
 
 
 def segment_pcd_from_depth_by_annotations(
@@ -61,11 +61,11 @@ def segment_pcd_from_depth_by_annotations(
         if color_decoded == black_color_str:
             unsegmented_cloud_indices = indexes
         else:
-            if color_decoded in track_colors:
-                track_id = track_colors[color_decoded]
+            if color_decoded in color_to_track:
+                track_id = color_to_track[color_decoded]
             else:
                 track_id = next_track_id
-                track_colors[color_decoded] = track_id
+                color_to_track[color_decoded] = track_id
                 next_track_id += 1
 
             planes.append(
