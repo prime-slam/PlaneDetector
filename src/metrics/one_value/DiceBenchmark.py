@@ -1,8 +1,6 @@
-import numpy as np
-
 from src.model.SegmentedPlane import SegmentedPlane
 from src.metrics.one_value.OneValueBenchmark import OneValueBenchmark
-from src.utils.metrics import planes_intersection_pcd
+from src.utils.metrics import planes_intersection_indices
 
 
 def dice(plane_predicted: SegmentedPlane, plane_gt: SegmentedPlane):
@@ -12,10 +10,10 @@ def dice(plane_predicted: SegmentedPlane, plane_gt: SegmentedPlane):
     :param plane_gt: ground truth segmentation
     :return: DICE value
     """
-    intersection = planes_intersection_pcd(plane_predicted, plane_gt)
-    intersection_size = np.asarray(intersection.points).size
-    gt_size = np.asarray(plane_gt.pcd.points).size
-    predicted_size = np.asarray(plane_predicted.pcd.points).size
+    intersection = planes_intersection_indices(plane_predicted, plane_gt)
+    intersection_size = intersection.size
+    gt_size = plane_gt.pcd_indices.size
+    predicted_size = plane_predicted.pcd_indices.size
 
     return 2 * intersection_size / (predicted_size + gt_size)
 

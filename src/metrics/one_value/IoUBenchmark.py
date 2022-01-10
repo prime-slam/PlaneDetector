@@ -1,8 +1,6 @@
-import numpy as np
-
 from src.model.SegmentedPlane import SegmentedPlane
 from src.metrics.one_value.OneValueBenchmark import OneValueBenchmark
-from src.utils.metrics import planes_union_pcd, planes_intersection_pcd
+from src.utils.metrics import planes_union_indices, planes_intersection_indices
 
 
 def iou(plane_predicted: SegmentedPlane, plane_gt: SegmentedPlane):
@@ -12,9 +10,9 @@ def iou(plane_predicted: SegmentedPlane, plane_gt: SegmentedPlane):
     :param plane_gt: ground truth segmentation
     :return: IoU value
     """
-    intersection = planes_intersection_pcd(plane_predicted, plane_gt)
-    union = planes_union_pcd(plane_predicted, plane_gt, intersection)
-    return np.asarray(intersection.points).size / np.asarray(union.points).size
+    intersection = planes_intersection_indices(plane_predicted, plane_gt)
+    union = planes_union_indices(plane_predicted, plane_gt, intersection)
+    return intersection.size / union.size
 
 
 class IoUBenchmark(OneValueBenchmark):
