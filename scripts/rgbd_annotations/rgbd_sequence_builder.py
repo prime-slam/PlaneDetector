@@ -50,17 +50,23 @@ if __name__ == "__main__":
     annotations = []
     annotations_ranges = []
 
-    for file in os.listdir(annotations_path):
+    annotation_files = os.listdir(annotations_path)
+    annotation_files = sorted(annotation_files, key=lambda x: int(x.split("-")[0]))
+    for file in annotation_files:
         filepath = os.path.join(annotations_path, file)
-        annotation = CVATAnnotation(filepath)
+        start_frame_annot = int(file.split("-")[0])
+        annotation = CVATAnnotation(filepath, start_frame_annot)
         annotations.append(annotation)
 
         # If have previous range then fix it to exclude this range
         if len(annotations_ranges) > 0:
             last_annotation_range = annotations_ranges[-1]
-            annotations_ranges[-1] = (last_annotation_range[0], min(last_annotation_range[1], annotation.max_frame_id - 1))
+            annotations_ranges[-1] = (
+                last_annotation_range[0],
+                min(last_annotation_range[1], annotation.get_min_frame_id() - 1)
+            )
 
-        annotations_ranges.append((annotation.min_frame_id, annotation.max_frame_id))
+        annotations_ranges.append((annotation.get_min_frame_id(), annotation.get_max_frame_id()))
 
     track_indices_matches = None
     previous_pcd = None
@@ -94,5 +100,7 @@ if __name__ == "__main__":
         previous_pcd = result_pcd
 
         save_frame(result_pcd, frame_num, output_path, cam_intrinsic, initial_pcd_transform)
-        print("Done!")
-        break
+
+        # if frame_num == 301:
+        #     print("Done!")
+        #     break

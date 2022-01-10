@@ -27,7 +27,7 @@ if __name__ == '__main__':
     loader = loaders[loader_name](path_to_dataset)
 
     if args.annotations_path is not None:
-        annotation = CVATAnnotation(args.annotations_path)
+        annotation = CVATAnnotation(args.annotations_path, args.annotations_start_frame)
     else:
         annotation = None
     # visualized_pcd = o3d.geometry.PointCloud()

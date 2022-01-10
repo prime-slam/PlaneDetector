@@ -55,6 +55,12 @@ def add_annotations_args(parser):
         help='Path to annotations.xml file in "CVAT for video" format'
     )
     parser.add_argument(
+        '--annotations_start_frame',
+        type=int,
+        default=0,
+        help='Depth frame number in dataset from which annotations starts in the selected file'
+    )
+    parser.add_argument(
         '--disable_annotation_filter_outliers',
         action='store_false',
         dest='filter_annotation_outliers',

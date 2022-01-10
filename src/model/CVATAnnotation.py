@@ -14,11 +14,12 @@ def parse_points(points_str):
 
 
 class CVATAnnotation:
-    def __init__(self, path):
+    def __init__(self, path: str, start_frame_num: int):
         root = objectify.parse(path).getroot()
         tracks = [child for child in root.iterchildren()][2:]
 
         self.tracks = []
+        self.start_frame_num = start_frame_num
         self.min_frame_id = None
         self.max_frame_id = None
 
@@ -43,10 +44,18 @@ class CVATAnnotation:
 
             self.tracks.append(planes_track)
 
+    def get_max_frame_id(self):
+        return self.max_frame_id + self.start_frame_num
+
+    def get_min_frame_id(self):
+        return self.min_frame_id + self.start_frame_num
+
     def get_plane_by_track_and_frame(self, track_id, frame_id):
+        frame_id -= self.start_frame_num
         return self.tracks[track_id].planes[frame_id]
 
     def get_all_planes_for_frame(self, frame_id):
+        frame_id -= self.start_frame_num
         return [track.planes[frame_id] for track in self.tracks if frame_id in track.planes]
 
     class Track:

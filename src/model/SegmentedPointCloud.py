@@ -21,7 +21,7 @@ class SegmentedPointCloud:
             planes = []
         self.planes = planes
         if unsegmented_cloud_indices is None:
-            unsegmented_cloud_indices = np.asarray([])
+            unsegmented_cloud_indices = np.asarray([], dtype=np.int64)
         self.unsegmented_cloud_indices = unsegmented_cloud_indices
 
     def __repr__(self):
