@@ -16,7 +16,10 @@ class SegmentedPointCloud:
     ):
         if pcd is None:
             pcd = o3d.geometry.PointCloud()
+        # Without this colors vector will be just empty
+        pcd.paint_uniform_color(SegmentedPointCloud.UNSEGMENTED_PCD_COLOR)
         self.pcd = pcd
+
         if planes is None:
             planes = []
         self.planes = planes

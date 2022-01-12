@@ -56,7 +56,7 @@ class TumLoader(ImageLoader):
         return depth_to_rgb_index
 
     class TumCameraConfig(CameraConfig):
-        def get_cam_intrinsic(self, image_shape) -> CameraIntrinsics:
+        def get_cam_intrinsic(self, image_shape=(480, 640)) -> CameraIntrinsics:
             return CameraIntrinsics(
                 width=image_shape[1],
                 height=image_shape[0],

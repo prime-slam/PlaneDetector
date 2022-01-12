@@ -43,8 +43,12 @@ if __name__ == '__main__':
             args.algo,
             args.metric
         )
-        result_for_visualization = result_pcd.get_color_pcd_for_visualization()
-        o3d.visualization.draw_geometries([result_for_visualization])
+        if result_pcd is not None:
+            result_for_visualization = result_pcd.get_color_pcd_for_visualization()
+            o3d.visualization.draw_geometries([result_for_visualization])
+        if detected_pcd is not None:
+            result_for_visualization = detected_pcd.get_color_pcd_for_visualization()
+            o3d.visualization.draw_geometries([result_for_visualization])
         # visualized_pcd.points = result_for_visualization.points
         # visualized_pcd.colors = result_for_visualization.colors
         # vis.add_geometry(visualized_pcd)

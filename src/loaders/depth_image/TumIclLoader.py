@@ -5,7 +5,7 @@ from src.loaders.depth_image.TumLoader import TumLoader
 
 class TumIclLoader(TumLoader):
     def provide_config(self) -> CameraConfig:
-        return self.IclNuimCameraConfig()
+        return self.TumIclCameraConfig()
 
     def _get_filenames(self, rgb_path, depth_path):
         rgb_filenames, depth_filenames = super()._get_filenames(
@@ -26,8 +26,8 @@ class TumIclLoader(TumLoader):
 
         return normalized_filenames
 
-    class IclNuimCameraConfig(CameraConfig):
-        def get_cam_intrinsic(self, image_shape) -> CameraIntrinsics:
+    class TumIclCameraConfig(CameraConfig):
+        def get_cam_intrinsic(self, image_shape=(480, 640)) -> CameraIntrinsics:
             # Taken from https://www.doc.ic.ac.uk/~ahanda/VaFRIC/codes.html
             return CameraIntrinsics(
                 width=image_shape[1],

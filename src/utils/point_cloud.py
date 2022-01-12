@@ -5,17 +5,6 @@ from src.loaders.depth_image.CameraIntrinsics import CameraIntrinsics
 from src.utils.colors import normalize_color_arr
 
 
-def depth_to_pcd(depth_image, camera_intrinsics: CameraIntrinsics, initial_pcd_transform):
-    pcd = o3d.geometry.PointCloud.create_from_depth_image(
-        o3d.geometry.Image(depth_image),
-        camera_intrinsics.open3dIntrinsics,
-        depth_scale=5000.0,
-        depth_trunc=1000.0
-    )
-    pcd.transform(initial_pcd_transform)
-    return pcd
-
-
 def rgb_and_depth_to_pcd_custom(rgb_image, depth_image, camera_intrinsics: CameraIntrinsics, initial_pcd_transform):
     pcd = depth_to_pcd_custom(depth_image, camera_intrinsics, initial_pcd_transform)
     pcd = load_rgb_colors_to_pcd(rgb_image, pcd)
