@@ -4,10 +4,10 @@ import cv2
 
 from scripts.rgbd_annotations.parser import create_input_parser
 from src.FrameProcessor import process_frame
+from src.loaders.depth_image.CameraIntrinsics import CameraIntrinsics
 from src.model.CVATAnnotation import CVATAnnotation
 from src.model.SegmentedPointCloud import SegmentedPointCloud
 from src.assosiators.NaiveIoUAssociator import associate_segmented_point_clouds
-from src.loaders.config import CameraIntrinsics
 from src.parser import loaders
 from src.utils.point_cloud import pcd_to_rgb_and_depth_custom
 
@@ -115,7 +115,3 @@ if __name__ == "__main__":
         previous_pcd = result_pcd
 
         save_frame(result_pcd, frame_num, output_path, cam_intrinsic, initial_pcd_transform)
-
-        # if frame_num == 301:
-        #     print("Done!")
-        #     break

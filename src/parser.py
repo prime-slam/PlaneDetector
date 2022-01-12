@@ -1,15 +1,15 @@
 import argparse
 
 from src.detectors import O3DRansacDetector, DDPFFDetector
-from src.loaders.tum import TumDataset
-from src.loaders.tum_icl import TumIclDataset
+from src.loaders.depth_image.TumLoader import TumLoader
+from src.loaders.depth_image.TumIclLoader import TumIclLoader
 from src.metrics.multi_value.MultiValueBenchmark import MultiValueBenchmark
 from src.metrics.one_value.DiceBenchmark import DiceBenchmark
 from src.metrics.one_value.IoUBenchmark import IoUBenchmark
 
 loaders = {
-    'tum': TumDataset,
-    'icl_tum': TumIclDataset
+    'tum': TumLoader,
+    'icl_tum': TumIclLoader
 }
 
 algos = {
