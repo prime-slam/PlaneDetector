@@ -5,15 +5,6 @@ from src.loaders.depth_image.CameraIntrinsics import CameraIntrinsics
 from src.utils.colors import normalize_color_arr
 
 
-def rgbd_to_pcd(rgbd_image, camera_intrinsics: CameraIntrinsics, initial_pcd_transform):
-    pcd = o3d.geometry.PointCloud.create_from_rgbd_image(
-        rgbd_image,
-        camera_intrinsics.open3dIntrinsics
-    )
-    pcd.transform(initial_pcd_transform)
-    return pcd
-
-
 def depth_to_pcd(depth_image, camera_intrinsics: CameraIntrinsics, initial_pcd_transform):
     pcd = o3d.geometry.PointCloud.create_from_depth_image(
         o3d.geometry.Image(depth_image),
@@ -27,8 +18,7 @@ def depth_to_pcd(depth_image, camera_intrinsics: CameraIntrinsics, initial_pcd_t
 
 def rgb_and_depth_to_pcd_custom(rgb_image, depth_image, camera_intrinsics: CameraIntrinsics, initial_pcd_transform):
     pcd = depth_to_pcd_custom(depth_image, camera_intrinsics, initial_pcd_transform)
-    colors = normalize_color_arr(rgb_image.reshape(camera_intrinsics.width * camera_intrinsics.height, 3))
-    pcd.colors = o3d.utility.Vector3dVector(colors)
+    pcd = load_rgb_colors_to_pcd(rgb_image, pcd)
 
     return pcd
 
@@ -46,6 +36,13 @@ def depth_to_pcd_custom(depth_image, camera_intrinsics: CameraIntrinsics, initia
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(points)
     pcd.transform(initial_pcd_transform)
+
+    return pcd
+
+
+def load_rgb_colors_to_pcd(rgb_image, pcd: o3d.geometry.PointCloud) -> o3d.geometry.PointCloud:
+    colors = normalize_color_arr(rgb_image.reshape(rgb_image.shape[0] * rgb_image.shape[1], 3))
+    pcd.colors = o3d.utility.Vector3dVector(colors)
 
     return pcd
 

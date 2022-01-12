@@ -1,10 +1,11 @@
 import numpy as np
 
+from src.loaders.depth_image.CameraIntrinsics import CameraIntrinsics
 from src.model.SegmentedPlane import SegmentedPlane
 from src.model.SegmentedPointCloud import SegmentedPointCloud
 from src.utils.annotations import draw_polygones
 from src.utils.colors import color_to_string, color_from_string, denormalize_color
-from src.utils.point_cloud import rgb_and_depth_to_pcd_custom
+from src.utils.point_cloud import load_rgb_colors_to_pcd
 
 
 def group_pcd_indexes_by_color(pcd):
@@ -23,35 +24,21 @@ next_track_id = 0
 color_to_track = {}
 
 
-def segment_pcd_from_depth_by_annotations(
-        depth_image,
-        cam_intrinsic,
-        initial_pcd_transform,
+def segment_pcd_by_annotations(
+        segmented_pcd: SegmentedPointCloud,
+        cam_intrinsic: CameraIntrinsics,
         annotation,
         frame_number
 ) -> SegmentedPointCloud:
     all_planes = annotation.get_all_planes_for_frame(frame_number)
-    image_shape = depth_image.shape
+    image_shape = (cam_intrinsic.height, cam_intrinsic.width)
     annotated_rgb = draw_polygones(all_planes, image_shape)
 
-    pcd = rgb_and_depth_to_pcd_custom(
-        annotated_rgb,
-        depth_image,
-        cam_intrinsic,
-        initial_pcd_transform
-    )
-    # rgbd_image = o3d.geometry.RGBDImage.create_from_color_and_depth(
-    #     o3d.geometry.Image(annotated_rgb),
-    #     o3d.geometry.Image(depth_image),
-    #     depth_scale=5000.0,
-    #     depth_trunc=1000.0,
-    #     convert_rgb_to_intensity=False
-    # )
-    # pcd = rgbd_to_pcd(rgbd_image, cam_intrinsic, initial_pcd_transform)
+    colored_pcd = load_rgb_colors_to_pcd(annotated_rgb, segmented_pcd.pcd)
 
     black_color = np.array([0., 0., 0.])
     black_color_str = color_to_string(black_color)
-    planes_indexes = group_pcd_indexes_by_color(pcd)
+    planes_indexes = group_pcd_indexes_by_color(colored_pcd)
 
     planes = []
     global next_track_id
@@ -76,4 +63,4 @@ def segment_pcd_from_depth_by_annotations(
                 )
             )
 
-    return SegmentedPointCloud(pcd, planes, unsegmented_cloud_indices)
+    return SegmentedPointCloud(colored_pcd, planes, unsegmented_cloud_indices)

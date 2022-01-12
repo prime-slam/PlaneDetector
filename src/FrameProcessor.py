@@ -1,24 +1,23 @@
 from src import OutlierDetector
 from src.detectors import AnnotationsDetector
+from src.loaders.depth_image.ImageLoader import ImageLoader
 from src.model.CVATAnnotation import CVATAnnotation
 from src.parser import algos, metrics
 from src.utils.point_cloud import depth_to_pcd
 
 
 def load_annotations(
-        loader,
+        loader: ImageLoader,
         depth_frame_num,
         annotation,
-        depth_image,
         cam_intrinsic,
-        initial_pcd_transform,
         filter_outliers
 ):
     frame_number = loader.depth_to_rgb_index[depth_frame_num]
-    result_pcd = AnnotationsDetector.segment_pcd_from_depth_by_annotations(
-        depth_image,
+    pcd = loader.read_pcd(depth_frame_num)
+    result_pcd = AnnotationsDetector.segment_pcd_by_annotations(
+        pcd,
         cam_intrinsic,
-        initial_pcd_transform,
         annotation,
         frame_number
     )
@@ -41,9 +40,7 @@ def process_frame(loader, depth_frame_num: int, annotation: CVATAnnotation, filt
             loader,
             depth_frame_num,
             annotation,
-            depth_image,
             cam_intrinsic,
-            initial_pcd_transform,
             filter_annotation_outliers
         )
         # PointCloudPrinter(result_pcd.get_color_pcd_for_visualization()).save_to_ply("result.ply")
