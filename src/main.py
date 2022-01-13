@@ -2,7 +2,7 @@ import numpy as np
 import open3d as o3d
 
 from src.FrameProcessor import process_frame
-from src.model.CVATAnnotation import CVATAnnotation
+from src.annotations.CVATAnnotation import CVATAnnotation
 from src.parser import create_input_parser, loaders
 
 

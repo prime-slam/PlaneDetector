@@ -2,7 +2,7 @@ from src import OutlierDetector
 from src.detectors import AnnotationsDetector
 from src.loaders.BaseLoader import BaseLoader
 from src.loaders.depth_image.ImageLoader import ImageLoader
-from src.model.CVATAnnotation import CVATAnnotation
+from src.annotations.CVATAnnotation import CVATAnnotation
 from src.model.SegmentedPointCloud import SegmentedPointCloud
 from src.parser import algos, metrics
 
