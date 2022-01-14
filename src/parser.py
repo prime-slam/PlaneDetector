@@ -5,6 +5,7 @@ from src.annotations.sse.SSEAnnotator import SSEAnnotator
 from src.detectors import O3DRansacDetector, DDPFFDetector
 from src.loaders.depth_image.TumLoader import TumLoader
 from src.loaders.depth_image.TumIclLoader import TumIclLoader
+from src.loaders.pcd.CarlaLoader import CarlaLoader
 from src.loaders.pcd.O3DLoader import O3DLoader
 from src.metrics.multi_value.MultiValueBenchmark import MultiValueBenchmark
 from src.metrics.one_value.DiceBenchmark import DiceBenchmark
@@ -13,7 +14,8 @@ from src.metrics.one_value.IoUBenchmark import IoUBenchmark
 loaders = {
     'tum': TumLoader,
     'icl_tum': TumIclLoader,
-    'o3d': O3DLoader
+    'o3d': O3DLoader,
+    'carla': CarlaLoader
 }
 
 annotators = {

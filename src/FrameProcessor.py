@@ -52,6 +52,8 @@ def process_frame(
         )
         # PointCloudPrinter(result_pcd.get_color_pcd_for_visualization()).save_to_ply("result.ply")
         # PointCloudPrinter(result_pcd.get_color_pcd_for_visualization()).save_to_pcd("result.pcd")
+    else:
+        result_pcd = input_pcd
 
     if algo is not None:
         detector = algos[algo]

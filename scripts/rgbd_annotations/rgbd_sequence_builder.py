@@ -6,7 +6,6 @@ from scripts.rgbd_annotations.parser import create_input_parser
 from src.FrameProcessor import process_frame
 from src.annotations.cvat.CVATAnnotator import CVATAnnotator
 from src.loaders.depth_image.CameraIntrinsics import CameraIntrinsics
-from src.annotations.cvat.CVATAnnotation import CVATAnnotation
 from src.model.SegmentedPointCloud import SegmentedPointCloud
 from src.assosiators.NaiveIoUAssociator import associate_segmented_point_clouds
 from src.parser import loaders
