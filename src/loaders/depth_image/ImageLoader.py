@@ -24,6 +24,9 @@ class ImageLoader(BaseLoader):
         self.rgb_images = [os.path.join(rgb_path, filename) for filename in rgb_filenames]
         self.depth_to_rgb_index = self.match_rgb_with_depth(rgb_filenames, depth_filenames)
 
+    def get_frame_count(self) -> int:
+        return len(self.depth_images)
+
     @abstractmethod
     def provide_config(self) -> CameraConfig:
         pass

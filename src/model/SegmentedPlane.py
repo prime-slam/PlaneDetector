@@ -1,5 +1,4 @@
 import numpy as np
-import open3d as o3d
 
 from src.utils.colors import get_random_color, normalize_color
 

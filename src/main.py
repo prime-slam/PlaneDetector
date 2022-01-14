@@ -3,7 +3,7 @@ import open3d as o3d
 
 from src.FrameProcessor import process_frame
 from src.annotations.cvat.CVATAnnotator import CVATAnnotator
-from src.parser import create_input_parser, loaders
+from src.parser import create_input_parser, loaders, annotators
 
 
 def pick_and_print_point(pcd: o3d.geometry.PointCloud):
@@ -21,23 +21,24 @@ if __name__ == '__main__':
     parser = create_input_parser()
     args = parser.parse_args()
     path_to_dataset = args.dataset_path
-    depth_frame_num = args.frame_num
+    frame_num = args.frame_num
     loader_name = args.loader
 
     loader = loaders[loader_name](path_to_dataset)
 
-    if args.annotations_path is not None:
-        annotator = CVATAnnotator(args.annotations_path, args.annotations_start_frame)
+    hasAnnotations = args.annotations_path is not None and args.annotator is not None
+    if hasAnnotations:
+        annotator = annotators[args.annotator](args.annotations_path, args.annotations_start_frame)
     else:
         annotator = None
     # visualized_pcd = o3d.geometry.PointCloud()
     # vis = o3d.visualization.Visualizer()
     # vis.create_window()
     # vis.add_geometry(visualized_pcd)
-    while depth_frame_num < len(loader.depth_images):
+    while frame_num < loader.get_frame_count():
         result_pcd, detected_pcd = process_frame(
             loader,
-            depth_frame_num,
+            frame_num,
             annotator,
             args.filter_annotation_outliers,
             args.algo,
@@ -56,6 +57,6 @@ if __name__ == '__main__':
         # vis.poll_events()
         # vis.update_renderer()
         # input()
-        depth_frame_num += 1
+        frame_num += 1
 
     # vis.destroy_window()

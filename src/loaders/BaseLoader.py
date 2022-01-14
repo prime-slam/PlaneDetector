@@ -10,3 +10,7 @@ class BaseLoader(ABC):
     @abstractmethod
     def read_pcd(self, frame_num) -> SegmentedPointCloud:
         pass
+
+    @abstractmethod
+    def get_frame_count(self) -> int:
+        pass

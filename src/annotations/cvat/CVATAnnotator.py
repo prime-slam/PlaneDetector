@@ -16,7 +16,7 @@ color_to_track = {}
 
 class CVATAnnotator(BaseAnnotator):
     def __init__(self, path, start_frame_num: int):
-        super().__init__(path)
+        super().__init__(path, start_frame_num)
         self.annotation = CVATAnnotation(path, start_frame_num)
 
     def annotate(self, segmented_pcd: SegmentedPointCloud, frame_num: int) -> SegmentedPointCloud:

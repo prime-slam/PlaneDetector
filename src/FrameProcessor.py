@@ -7,17 +7,21 @@ from src.model.SegmentedPointCloud import SegmentedPointCloud
 from src.parser import algos, metrics
 
 
-def load_annotations_depth_image(
-        loader: ImageLoader,
+def load_annotations(
+        loader: BaseLoader,
         input_pcd: SegmentedPointCloud,
         depth_frame_num,
         annotator: CVATAnnotator,
         filter_outliers
 ):
-    rgb_frame_num = loader.depth_to_rgb_index[depth_frame_num]
+    if isinstance(annotator, ImageLoader):
+        annotation_frame_num = loader.depth_to_rgb_index[depth_frame_num]
+    else:
+        annotation_frame_num = depth_frame_num
+
     result_pcd = annotator.annotate(
         input_pcd,
-        rgb_frame_num
+        annotation_frame_num
     )
     if filter_outliers:
         result_pcd = OutlierDetector.remove_planes_outliers(result_pcd)
@@ -38,8 +42,8 @@ def process_frame(
 
     input_pcd = loader.read_pcd(frame_num)
 
-    if annotator is not None and isinstance(loader, ImageLoader):
-        result_pcd = load_annotations_depth_image(
+    if annotator is not None:
+        result_pcd = load_annotations(
             loader,
             input_pcd,
             frame_num,
