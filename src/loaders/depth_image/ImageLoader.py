@@ -53,5 +53,6 @@ class ImageLoader(BaseLoader):
 
         return SegmentedPointCloud(
             pcd=pcd,
-            unsegmented_cloud_indices=np.arange(depth_image.size)
+            unsegmented_cloud_indices=np.arange(depth_image.size),
+            structured_shape=(depth_image.shape[0], depth_image.shape[1])
         )

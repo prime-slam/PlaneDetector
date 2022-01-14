@@ -2,7 +2,7 @@ import numpy as np
 import open3d as o3d
 
 from src.FrameProcessor import process_frame
-from src.annotations.CVATAnnotation import CVATAnnotation
+from src.annotations.cvat.CVATAnnotator import CVATAnnotator
 from src.parser import create_input_parser, loaders
 
 
@@ -27,9 +27,9 @@ if __name__ == '__main__':
     loader = loaders[loader_name](path_to_dataset)
 
     if args.annotations_path is not None:
-        annotation = CVATAnnotation(args.annotations_path, args.annotations_start_frame)
+        annotator = CVATAnnotator(args.annotations_path, args.annotations_start_frame)
     else:
-        annotation = None
+        annotator = None
     # visualized_pcd = o3d.geometry.PointCloud()
     # vis = o3d.visualization.Visualizer()
     # vis.create_window()
@@ -38,7 +38,7 @@ if __name__ == '__main__':
         result_pcd, detected_pcd = process_frame(
             loader,
             depth_frame_num,
-            annotation,
+            annotator,
             args.filter_annotation_outliers,
             args.algo,
             args.metric

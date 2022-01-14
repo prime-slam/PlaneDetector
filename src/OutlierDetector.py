@@ -17,4 +17,9 @@ def remove_planes_outliers(segmented_pcd: SegmentedPointCloud) -> SegmentedPoint
 
     updated_unsegmented_indices = np.concatenate(unsegmented_indices_list)
 
-    return SegmentedPointCloud(segmented_pcd.pcd, updated_planes, updated_unsegmented_indices)
+    return SegmentedPointCloud(
+        segmented_pcd.pcd,
+        updated_planes,
+        updated_unsegmented_indices,
+        structured_shape=segmented_pcd.structured_shape
+    )

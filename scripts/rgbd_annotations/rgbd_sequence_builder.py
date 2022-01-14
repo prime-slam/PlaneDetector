@@ -4,8 +4,9 @@ import cv2
 
 from scripts.rgbd_annotations.parser import create_input_parser
 from src.FrameProcessor import process_frame
+from src.annotations.cvat.CVATAnnotator import CVATAnnotator
 from src.loaders.depth_image.CameraIntrinsics import CameraIntrinsics
-from src.annotations.CVATAnnotation import CVATAnnotation
+from src.annotations.cvat.CVATAnnotation import CVATAnnotation
 from src.model.SegmentedPointCloud import SegmentedPointCloud
 from src.assosiators.NaiveIoUAssociator import associate_segmented_point_clouds
 from src.parser import loaders
@@ -58,7 +59,7 @@ if __name__ == "__main__":
     cam_intrinsic = loader.config.get_cam_intrinsic(depth_image.shape)
     initial_pcd_transform = loader.config.get_initial_pcd_transform()
 
-    annotations = []
+    annotators = []
     annotations_ranges = []
 
     annotation_files = os.listdir(annotations_path)
@@ -66,18 +67,18 @@ if __name__ == "__main__":
     for file in annotation_files:
         filepath = os.path.join(annotations_path, file)
         start_frame_annot = int(file.split("-")[0])
-        annotation = CVATAnnotation(filepath, start_frame_annot)
-        annotations.append(annotation)
+        annotator = CVATAnnotator(filepath, start_frame_annot)
+        annotators.append(annotator)
 
         # If have previous range then fix it to exclude this range
         if len(annotations_ranges) > 0:
             last_annotation_range = annotations_ranges[-1]
             annotations_ranges[-1] = (
                 last_annotation_range[0],
-                min(last_annotation_range[1], annotation.get_min_frame_id() - 1)
+                min(last_annotation_range[1], annotator.annotation.get_min_frame_id() - 1)
             )
 
-        annotations_ranges.append((annotation.get_min_frame_id(), annotation.get_max_frame_id()))
+        annotations_ranges.append((annotator.annotation.get_min_frame_id(), annotator.annotation.get_max_frame_id()))
 
     track_indices_matches = None
     previous_pcd = None
@@ -98,7 +99,7 @@ if __name__ == "__main__":
         result_pcd, _ = process_frame(
             loader,
             frame_num,
-            annotations[annotation_index],
+            annotators[annotation_index],
             args.filter_annotation_outliers,
             algo=None,
             metric=None

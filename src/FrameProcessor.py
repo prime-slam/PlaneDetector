@@ -1,8 +1,8 @@
 from src import OutlierDetector
-from src.detectors import AnnotationsDetector
+from src.annotations.BaseAnnotator import BaseAnnotator
+from src.annotations.cvat import CVATAnnotator
 from src.loaders.BaseLoader import BaseLoader
 from src.loaders.depth_image.ImageLoader import ImageLoader
-from src.annotations.CVATAnnotation import CVATAnnotation
 from src.model.SegmentedPointCloud import SegmentedPointCloud
 from src.parser import algos, metrics
 
@@ -11,14 +11,12 @@ def load_annotations_depth_image(
         loader: ImageLoader,
         input_pcd: SegmentedPointCloud,
         depth_frame_num,
-        annotation,
+        annotator: CVATAnnotator,
         filter_outliers
 ):
     rgb_frame_num = loader.depth_to_rgb_index[depth_frame_num]
-    result_pcd = AnnotationsDetector.segment_pcd_by_annotations(
+    result_pcd = annotator.annotate(
         input_pcd,
-        loader.config.get_cam_intrinsic(),
-        annotation,
         rgb_frame_num
     )
     if filter_outliers:
@@ -30,7 +28,7 @@ def load_annotations_depth_image(
 def process_frame(
         loader: BaseLoader,
         frame_num: int,
-        annotation: CVATAnnotation,
+        annotator: BaseAnnotator,
         filter_annotation_outliers,
         algo,
         metric
@@ -40,12 +38,12 @@ def process_frame(
 
     input_pcd = loader.read_pcd(frame_num)
 
-    if annotation is not None and isinstance(loader, ImageLoader):
+    if annotator is not None and isinstance(loader, ImageLoader):
         result_pcd = load_annotations_depth_image(
             loader,
             input_pcd,
             frame_num,
-            annotation,
+            annotator,
             filter_annotation_outliers
         )
         # PointCloudPrinter(result_pcd.get_color_pcd_for_visualization()).save_to_ply("result.ply")
@@ -53,9 +51,9 @@ def process_frame(
 
     if algo is not None:
         detector = algos[algo]
-        detected_pcd = detector.detect_planes(input_pcd.pcd)
+        detected_pcd = detector.detect_planes(input_pcd)
 
-    if annotation is not None and algo is not None and len(metric) > 0:
+    if annotator is not None and algo is not None and len(metric) > 0:
         for metric_name in metric:
             benchmark = metrics[metric_name]()
             benchmark_result = benchmark.execute(detected_pcd, result_pcd)

@@ -5,7 +5,8 @@ from src.model.SegmentedPlane import SegmentedPlane
 from src.model.SegmentedPointCloud import SegmentedPointCloud
 
 
-def detect_planes(pcd: o3d.geometry.PointCloud) -> SegmentedPointCloud:
+def detect_planes(segmented_pcd: SegmentedPointCloud) -> SegmentedPointCloud:
+    pcd = segmented_pcd.pcd
     with open("planes.txt", 'r') as planes_input:
         all_plane_indices = set()
         planes = []
@@ -19,4 +20,9 @@ def detect_planes(pcd: o3d.geometry.PointCloud) -> SegmentedPointCloud:
             np.concatenate(list(all_plane_indices))
         )
 
-        return SegmentedPointCloud(pcd, planes, outlier_pcd_indices)
+        return SegmentedPointCloud(
+            pcd,
+            planes,
+            outlier_pcd_indices,
+            structured_shape=segmented_pcd.structured_shape
+        )

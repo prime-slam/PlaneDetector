@@ -13,6 +13,7 @@ class SegmentedPointCloud:
             pcd: o3d.geometry.PointCloud,
             planes: [SegmentedPlane] = None,
             unsegmented_cloud_indices: np.array = None,
+            structured_shape: tuple = None
     ):
         if pcd is None:
             pcd = o3d.geometry.PointCloud()
@@ -26,6 +27,7 @@ class SegmentedPointCloud:
         if unsegmented_cloud_indices is None:
             unsegmented_cloud_indices = np.asarray([], dtype=np.int64)
         self.unsegmented_cloud_indices = unsegmented_cloud_indices
+        self.structured_shape = structured_shape
 
     def __repr__(self):
         return "Cloud: {{planes: {0}, unsegmented_cloud_indices: {1}, pcd: {2}}}".format(

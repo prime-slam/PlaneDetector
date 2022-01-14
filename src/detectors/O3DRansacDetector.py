@@ -19,7 +19,8 @@ def detect_plane(pcd):
     return inliers, outliers
 
 
-def detect_planes(pcd: o3d.geometry.PointCloud, num_planes=5) -> SegmentedPointCloud:
+def detect_planes(segmented_pcd: SegmentedPointCloud, num_planes=5) -> SegmentedPointCloud:
+    pcd = segmented_pcd.pcd
     outlier_pcd = pcd
     detected_planes = []
     detected_indices = []
@@ -41,4 +42,9 @@ def detect_planes(pcd: o3d.geometry.PointCloud, num_planes=5) -> SegmentedPointC
         np.concatenate(detected_indices)
     )
 
-    return SegmentedPointCloud(pcd, detected_planes, outlier_indices)
+    return SegmentedPointCloud(
+        pcd,
+        detected_planes,
+        outlier_indices,
+        structured_shape=segmented_pcd.structured_shape
+    )

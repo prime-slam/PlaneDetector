@@ -8,5 +8,5 @@ class BaseAnnotator(ABC):
         self.path = path
 
     @abstractmethod
-    def annotate(self, pcd: SegmentedPointCloud):
+    def annotate(self, pcd: SegmentedPointCloud, frame_num: int) -> SegmentedPointCloud:
         pass
