@@ -8,6 +8,9 @@ def remove_planes_outliers(segmented_pcd: SegmentedPointCloud) -> SegmentedPoint
     updated_planes = []
     unsegmented_indices_list = [segmented_pcd.unsegmented_cloud_indices]
     for plane in segmented_pcd.planes:
+        if plane.pcd_indices.size < 3:
+            updated_planes.append(SegmentedPlane(plane.pcd_indices, plane.track_id, plane.color))
+            continue
         plane_pcd = segmented_pcd.pcd.select_by_index(plane.pcd_indices)
         inliers, outliers = detect_plane(plane_pcd)  # indices in the small pcd of only one plane
         inlier_indices = plane.pcd_indices[inliers]
