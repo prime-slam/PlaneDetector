@@ -6,7 +6,7 @@ from src.loaders.depth_image.CameraIntrinsics import CameraIntrinsics
 from src.model.SegmentedPlane import SegmentedPlane
 from src.model.SegmentedPointCloud import SegmentedPointCloud
 from src.utils.annotations import draw_polygones
-from src.utils.colors import color_to_string, color_from_string, denormalize_color
+from src.utils.colors import color_to_string, color_from_string, denormalize_color, denormalize_color_arr
 from src.utils.point_cloud import load_rgb_colors_to_pcd
 
 
@@ -36,22 +36,21 @@ class CVATAnnotator(BaseAnnotator):
         global next_track_id
         unsegmented_cloud_indices = None
         for color_str, indexes in planes_indexes.items():
-            color_decoded = color_str.decode('UTF-8')
-            if color_decoded == black_color_str:
+            if color_str == black_color_str:
                 unsegmented_cloud_indices = indexes
             else:
-                if color_decoded in color_to_track:
-                    track_id = color_to_track[color_decoded]
+                if color_str in color_to_track:
+                    track_id = color_to_track[color_str]
                 else:
                     track_id = next_track_id
-                    color_to_track[color_decoded] = track_id
+                    color_to_track[color_str] = track_id
                     next_track_id += 1
 
                 planes.append(
                     SegmentedPlane(
                         indexes,
                         track_id,
-                        color_from_string(color_str)
+                        denormalize_color(color_from_string(color_str))
                     )
                 )
 
@@ -65,10 +64,9 @@ class CVATAnnotator(BaseAnnotator):
     def __group_pcd_indexes_by_color(self, pcd):
         result = {}
         colors = np.asarray(pcd.colors)
-        colors_string = np.fromiter((color_to_string(denormalize_color(color)) for color in colors), dtype='|S256')
-        unique_colors = np.unique(colors_string)
+        unique_colors = np.unique(colors, axis=0)
         for color in unique_colors:
             # remember that np.where returns tuple --- we have to extract array from it
-            result[color] = np.where(colors_string == color)[0]
+            result[color_to_string(color)] = np.where(np.all(colors == color, axis=1))[0]
 
         return result

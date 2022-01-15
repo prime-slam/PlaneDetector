@@ -17,6 +17,10 @@ def denormalize_color(color):
     return np.round(np.asarray([channel * 255 for channel in color]))
 
 
+def denormalize_color_arr(color_arr):
+    return color_arr * 255
+
+
 def get_random_normalized_color():
     return normalize_color(get_random_color())
 
@@ -27,4 +31,4 @@ def color_to_string(color_arr):
 
 
 def color_from_string(color_str):
-    return np.fromiter((float(channel_str) for channel_str in color_str.decode('UTF-8').split(',')), dtype=np.float64)
+    return np.fromiter((float(channel_str) for channel_str in color_str.split(',')), dtype=np.float64)
