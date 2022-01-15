@@ -1,7 +1,7 @@
 import numpy as np
 
+from src.detectors.O3DRansacDetector import O3DRansacDetector
 from src.model.SegmentedPointCloud import SegmentedPointCloud, SegmentedPlane
-from src.detectors.O3DRansacDetector import detect_plane
 
 
 def remove_planes_outliers(segmented_pcd: SegmentedPointCloud) -> SegmentedPointCloud:
@@ -12,7 +12,7 @@ def remove_planes_outliers(segmented_pcd: SegmentedPointCloud) -> SegmentedPoint
             updated_planes.append(SegmentedPlane(plane.pcd_indices, plane.track_id, plane.color))
             continue
         plane_pcd = segmented_pcd.pcd.select_by_index(plane.pcd_indices)
-        inliers, outliers = detect_plane(plane_pcd)  # indices in the small pcd of only one plane
+        inliers, outliers = O3DRansacDetector.detect_plane(plane_pcd)  # indices in the small pcd of only one plane
         inlier_indices = plane.pcd_indices[inliers]
         outlier_indices = plane.pcd_indices[outliers]
         unsegmented_indices_list.append(outlier_indices)

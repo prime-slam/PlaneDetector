@@ -2,6 +2,7 @@ from abc import abstractmethod, ABC
 
 import numpy as np
 
+from src.metrics.BaseBenchmark import BaseBenchmark
 from src.model.SegmentedPlane import SegmentedPlane
 from src.model.SegmentedPointCloud import SegmentedPointCloud
 
@@ -13,7 +14,7 @@ class OneValueBenchmarkResult:
         self.predicted = predicted
         self.metric_name = metric_name
 
-    def __repr__(self):
+    def __str__(self):
         return f"Results of '{self.metric_name}' metric\n" \
                f"Predicted: {self.predicted}\n" \
                f"Missed: {self.missed}\n" \
@@ -25,18 +26,18 @@ class OneValueBenchmarkResult:
         return np.average(np.array(list(self.predicted.values()))[:, 1].astype(float))
 
 
-class OneValueBenchmark(ABC):
+class OneValueBenchmark(BaseBenchmark):
 
     @property
     def metric_name(self):
-        return self.get_metric_name()
+        return self._get_metric_name()
 
     @abstractmethod
-    def get_metric_name(self):
+    def _get_metric_name(self):
         pass
 
     @abstractmethod
-    def calculate_metric(self, plane_predicted: SegmentedPlane, plane_gt: SegmentedPlane) -> float:
+    def _calculate_metric(self, plane_predicted: SegmentedPlane, plane_gt: SegmentedPlane) -> float:
         pass
 
     def execute(self, cloud_predicted: SegmentedPointCloud, cloud_gt: SegmentedPointCloud):
@@ -48,7 +49,7 @@ class OneValueBenchmark(ABC):
             max_metric = 0
             max_metric_gt_plane = None
             for gt_plane in cloud_gt.planes:
-                metric_value = self.calculate_metric(predicted_plane, gt_plane)
+                metric_value = self._calculate_metric(predicted_plane, gt_plane)
                 if metric_value > max_metric:
                     max_metric_gt_plane = gt_plane
                     max_metric = metric_value

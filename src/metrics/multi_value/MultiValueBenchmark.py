@@ -1,3 +1,4 @@
+from src.metrics.BaseBenchmark import BaseBenchmark
 from src.model.SegmentedPointCloud import SegmentedPointCloud
 from src.utils.metrics import are_nearly_overlapped
 
@@ -19,7 +20,7 @@ class MultiValueBenchmarkResult:
         self.missed_rate = missed
         self.noise_rate = noise
 
-    def __repr__(self):
+    def __str__(self):
         return f"Results of 'multi value' metric\n" \
                f"Precision: {self.plane_precision}\n" \
                f"Recall: {self.plane_recall}\n" \
@@ -29,7 +30,7 @@ class MultiValueBenchmarkResult:
                f"Noise rate: {self.noise_rate}"
 
 
-class MultiValueBenchmark:
+class MultiValueBenchmark(BaseBenchmark):
     def __init__(self, overlap_threshold=0.8):
         self.overlap_threshold = overlap_threshold
 

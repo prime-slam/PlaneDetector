@@ -4,7 +4,7 @@ from src.loaders.depth_image.TumLoader import TumLoader
 
 
 class TumIclLoader(TumLoader):
-    def provide_config(self) -> CameraConfig:
+    def _provide_config(self) -> CameraConfig:
         return self.TumIclCameraConfig()
 
     def _get_filenames(self, rgb_path, depth_path):

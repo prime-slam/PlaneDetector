@@ -1,10 +1,11 @@
 from src import OutlierDetector
 from src.annotations.BaseAnnotator import BaseAnnotator
 from src.annotations.cvat import CVATAnnotator
+from src.detectors.BaseDetector import BaseDetector
 from src.loaders.BaseLoader import BaseLoader
 from src.loaders.depth_image.ImageLoader import ImageLoader
+from src.metrics.BaseBenchmark import BaseBenchmark
 from src.model.SegmentedPointCloud import SegmentedPointCloud
-from src.parser import algos, metrics
 
 
 def load_annotations(
@@ -33,10 +34,10 @@ def process_frame(
         loader: BaseLoader,
         frame_num: int,
         annotator: BaseAnnotator,
-        filter_annotation_outliers,
-        algo,
-        metric
-):
+        filter_annotation_outliers: bool,
+        detector: BaseDetector,
+        benchmark: BaseBenchmark
+) -> (SegmentedPointCloud, SegmentedPointCloud):
     result_pcd = None
     detected_pcd = None
 
@@ -55,14 +56,11 @@ def process_frame(
     else:
         result_pcd = input_pcd
 
-    if algo is not None:
-        detector = algos[algo]
+    if detector is not None:
         detected_pcd = detector.detect_planes(input_pcd)
 
-    if annotator is not None and algo is not None and len(metric) > 0:
-        for metric_name in metric:
-            benchmark = metrics[metric_name]()
-            benchmark_result = benchmark.execute(detected_pcd, result_pcd)
-            print(benchmark_result)
+    if annotator is not None and detector is not None and benchmark is not None:
+        benchmark_result = benchmark.execute(detected_pcd, result_pcd)
+        print(benchmark_result)
 
     return result_pcd, detected_pcd

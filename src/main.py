@@ -2,8 +2,8 @@ import numpy as np
 import open3d as o3d
 
 from src.FrameProcessor import process_frame
-from src.annotations.cvat.CVATAnnotator import CVATAnnotator
-from src.parser import create_input_parser, loaders, annotators
+from src.metrics.CompositeBenchmark import CompositeBenchmark
+from src.parser import create_input_parser, loaders, annotators, algos, metrics
 
 
 def pick_and_print_point(pcd: o3d.geometry.PointCloud):
@@ -31,18 +31,28 @@ if __name__ == '__main__':
         annotator = annotators[args.annotator](args.annotations_path, args.annotations_start_frame)
     else:
         annotator = None
-    # visualized_pcd = o3d.geometry.PointCloud()
-    # vis = o3d.visualization.Visualizer()
-    # vis.create_window()
-    # vis.add_geometry(visualized_pcd)
+
+    if args.algo is not None:
+        detector = algos[args.algo]()
+    else:
+        detector = None
+
+    if args.metric is not None:
+        benchmarks = []
+        for metric_name in args.metric:
+            benchmarks.append(metrics[metric_name]())
+        benchmark = CompositeBenchmark(benchmarks)
+    else:
+        benchmark = None
+
     while frame_num < loader.get_frame_count():
         result_pcd, detected_pcd = process_frame(
             loader,
             frame_num,
             annotator,
             args.filter_annotation_outliers,
-            args.algo,
-            args.metric
+            detector,
+            benchmark
         )
         if result_pcd is not None:
             result_for_visualization = result_pcd.get_color_pcd_for_visualization()
@@ -50,13 +60,5 @@ if __name__ == '__main__':
         if detected_pcd is not None:
             result_for_visualization = detected_pcd.get_color_pcd_for_visualization()
             o3d.visualization.draw_geometries([result_for_visualization])
-        # visualized_pcd.points = result_for_visualization.points
-        # visualized_pcd.colors = result_for_visualization.colors
-        # vis.add_geometry(visualized_pcd)
-        # vis.run()
-        # vis.poll_events()
-        # vis.update_renderer()
-        # input()
-        frame_num += 1
 
-    # vis.destroy_window()
+        frame_num += 1

@@ -9,10 +9,10 @@ class TumLoader(ImageLoader):
     def __init__(self, path):
         super().__init__(path)
 
-    def provide_config(self) -> CameraConfig:
+    def _provide_config(self) -> CameraConfig:
         return self.TumCameraConfig()
 
-    def provide_rgb_and_depth_path(self, path):
+    def _provide_rgb_and_depth_path(self, path):
         depth_path = os.path.join(path, "depth")
         rgb_path = os.path.join(path, "rgb")
 
@@ -24,14 +24,14 @@ class TumLoader(ImageLoader):
 
         return rgb_filenames, depth_filenames
 
-    def provide_filenames(self, rgb_path, depth_path):
+    def _provide_filenames(self, rgb_path, depth_path) -> (list, list):
         rgb_filenames, depth_filenames = self._get_filenames(rgb_path, depth_path)
         rgb_filenames.sort()
         depth_filenames.sort()
 
         return rgb_filenames, depth_filenames
 
-    def match_rgb_with_depth(self, rgb_filenames, depth_filenames) -> list:
+    def _match_rgb_with_depth(self, rgb_filenames, depth_filenames) -> list:
         depth_to_rgb_index = []
         rgb_index = 0
         depth_index = 0

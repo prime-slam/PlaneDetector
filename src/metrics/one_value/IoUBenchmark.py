@@ -16,8 +16,8 @@ def iou(plane_predicted: SegmentedPlane, plane_gt: SegmentedPlane):
 
 
 class IoUBenchmark(OneValueBenchmark):
-    def get_metric_name(self):
+    def _get_metric_name(self):
         return "IoU"
 
-    def calculate_metric(self, plane_predicted: SegmentedPlane, plane_gt: SegmentedPlane) -> float:
+    def _calculate_metric(self, plane_predicted: SegmentedPlane, plane_gt: SegmentedPlane) -> float:
         return iou(plane_predicted, plane_gt)

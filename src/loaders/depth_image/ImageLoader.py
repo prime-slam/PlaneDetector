@@ -14,33 +14,33 @@ from src.utils.point_cloud import depth_to_pcd_custom
 class ImageLoader(BaseLoader):
     def __init__(self, path):
         super().__init__(path)
-        self.config = self.provide_config()
+        self.config = self._provide_config()
 
-        rgb_path, depth_path = self.provide_rgb_and_depth_path(path)
+        rgb_path, depth_path = self._provide_rgb_and_depth_path(path)
 
-        rgb_filenames, depth_filenames = self.provide_filenames(rgb_path, depth_path)
+        rgb_filenames, depth_filenames = self._provide_filenames(rgb_path, depth_path)
 
         self.depth_images = [os.path.join(depth_path, filename) for filename in depth_filenames]
         self.rgb_images = [os.path.join(rgb_path, filename) for filename in rgb_filenames]
-        self.depth_to_rgb_index = self.match_rgb_with_depth(rgb_filenames, depth_filenames)
+        self.depth_to_rgb_index = self._match_rgb_with_depth(rgb_filenames, depth_filenames)
 
     def get_frame_count(self) -> int:
         return len(self.depth_images)
 
     @abstractmethod
-    def provide_config(self) -> CameraConfig:
+    def _provide_config(self) -> CameraConfig:
         pass
 
     @abstractmethod
-    def provide_rgb_and_depth_path(self, path: str) -> (str, str):
+    def _provide_rgb_and_depth_path(self, path: str) -> (str, str):
         pass
 
     @abstractmethod
-    def match_rgb_with_depth(self, rgb_filenames, depth_filenames) -> list:
+    def _match_rgb_with_depth(self, rgb_filenames, depth_filenames) -> list:
         pass
 
     @abstractmethod
-    def provide_filenames(self, rgb_path, depth_path):
+    def _provide_filenames(self, rgb_path, depth_path) -> (list, list):
         pass
 
     def read_depth_image(self, frame_num) -> np.array:

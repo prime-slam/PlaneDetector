@@ -2,7 +2,8 @@ import argparse
 
 from src.annotations.cvat.CVATAnnotator import CVATAnnotator
 from src.annotations.sse.SSEAnnotator import SSEAnnotator
-from src.detectors import O3DRansacDetector, DDPFFDetector
+from src.detectors.DDPFFDetector import DDPFFDetector
+from src.detectors.O3DRansacDetector import O3DRansacDetector
 from src.loaders.depth_image.TumLoader import TumLoader
 from src.loaders.depth_image.TumIclLoader import TumIclLoader
 from src.loaders.pcd.CarlaLoader import CarlaLoader
@@ -96,10 +97,8 @@ def add_algo_args(parser):
     )
     parser.add_argument(
         '--metric',
-        type=str,
         action='append',
         choices=metrics.keys(),
-        default='iou',
         help='Name of metrics for algorithm benchmarking'
     )
 

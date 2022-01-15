@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+import numpy as np
+
 from src.loaders.depth_image.CameraIntrinsics import CameraIntrinsics
 
 
@@ -9,5 +11,5 @@ class CameraConfig(ABC):
         pass
 
     @abstractmethod
-    def get_initial_pcd_transform(self):
+    def get_initial_pcd_transform(self) -> np.array:
         pass
