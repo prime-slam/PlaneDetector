@@ -100,8 +100,8 @@ if __name__ == "__main__":
             frame_num,
             annotators[annotation_index],
             args.filter_annotation_outliers,
-            algo=None,
-            metric=None
+            detector=None,
+            benchmark=None
         )
 
         # First frame of not first annotation have to be associated with previous pcd
