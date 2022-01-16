@@ -2,11 +2,10 @@ import numpy as np
 
 from src.annotations.BaseAnnotator import BaseAnnotator
 from src.annotations.cvat.CVATAnnotation import CVATAnnotation
-from src.loaders.depth_image.CameraIntrinsics import CameraIntrinsics
 from src.model.SegmentedPlane import SegmentedPlane
 from src.model.SegmentedPointCloud import SegmentedPointCloud
 from src.utils.annotations import draw_polygones
-from src.utils.colors import color_to_string, color_from_string, denormalize_color, denormalize_color_arr
+from src.utils.colors import color_to_string, color_from_string, denormalize_color
 from src.utils.point_cloud import load_rgb_colors_to_pcd
 
 

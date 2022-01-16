@@ -3,7 +3,7 @@ from lxml import objectify
 from src.utils.colors import get_random_color
 
 
-def parse_points(points_str):
+def parse_points(points_str) -> list:
     points = []
     for point_str in points_str.split(';'):
         coords_str = point_str.split(',')
@@ -11,6 +11,19 @@ def parse_points(points_str):
         points.append(coords)
 
     return points
+
+
+def parse_points_from_box(frame_info) -> list:
+    x_left = frame_info.attrib['xtl']
+    x_right = frame_info.attrib['xbr']
+    y_top = frame_info.attrib['ytl']
+    y_bottom = frame_info.attrib['ybr']
+    return [
+        [x_left, y_top],
+        [x_right, y_top],
+        [x_right, y_bottom],
+        [x_left, y_bottom]
+    ]
 
 
 class CVATAnnotation:
@@ -27,7 +40,10 @@ class CVATAnnotation:
             frames = track.getchildren()
             planes_track = self.Track()
             for frame in frames:
-                points = parse_points(frame.attrib['points'])
+                if frame.tag == "polygon":
+                    points = parse_points(frame.attrib['points'])
+                else:
+                    points = parse_points_from_box(frame)
                 frame_id = int(frame.attrib['frame'])
 
                 if self.min_frame_id is None or frame_id < self.min_frame_id:

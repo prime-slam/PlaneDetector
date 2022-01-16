@@ -7,25 +7,6 @@ class TumIclLoader(TumLoader):
     def _provide_config(self) -> CameraConfig:
         return self.TumIclCameraConfig()
 
-    def _get_filenames(self, rgb_path, depth_path):
-        rgb_filenames, depth_filenames = super()._get_filenames(
-            rgb_path,
-            depth_path
-        )
-        normalized_rgb_filenames = TumIclLoader.__normalize_filenames(rgb_filenames)
-        normalized_depth_filenames = TumIclLoader.__normalize_filenames(depth_filenames)
-
-        return normalized_rgb_filenames, normalized_depth_filenames
-
-    @staticmethod
-    def __normalize_filenames(filenames):
-        max_filename_len = max([len(filename[:-4]) for filename in filenames])
-        normalized_filenames = [
-            "0" * (max_filename_len - len(filename[:-4])) + filename for filename in filenames
-        ]
-
-        return normalized_filenames
-
     class TumIclCameraConfig(CameraConfig):
         def get_cam_intrinsic(self, image_shape=(480, 640)) -> CameraIntrinsics:
             # Taken from https://www.doc.ic.ac.uk/~ahanda/VaFRIC/codes.html

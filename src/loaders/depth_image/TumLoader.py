@@ -18,16 +18,16 @@ class TumLoader(ImageLoader):
 
         return rgb_path, depth_path
 
-    def _get_filenames(self, rgb_path, depth_path):
+    @staticmethod
+    def __filenames_sorted_mapper(filename):
+        return int(filename.split(".")[0])
+
+    def _provide_filenames(self, rgb_path, depth_path) -> (list, list):
         rgb_filenames = os.listdir(rgb_path)
         depth_filenames = os.listdir(depth_path)
 
-        return rgb_filenames, depth_filenames
-
-    def _provide_filenames(self, rgb_path, depth_path) -> (list, list):
-        rgb_filenames, depth_filenames = self._get_filenames(rgb_path, depth_path)
-        rgb_filenames.sort()
-        depth_filenames.sort()
+        rgb_filenames = sorted(rgb_filenames, key=TumLoader.__filenames_sorted_mapper)
+        depth_filenames = sorted(depth_filenames, key=TumLoader.__filenames_sorted_mapper)
 
         return rgb_filenames, depth_filenames
 
