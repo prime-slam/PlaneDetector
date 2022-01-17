@@ -30,12 +30,12 @@ def update_planes_colors(result_pcd: SegmentedPointCloud, track_to_color: dict) 
 
 def save_frame(
         pcd: SegmentedPointCloud,
-        frame_num: int,
+        filename: str,
         output_path: str,
         camera_intrinsics: CameraIntrinsics,
         initial_pcd_transform
 ):
-    image_path = os.path.join(output_path, "{}.png".format(frame_num))
+    image_path = os.path.join(output_path, "{}.png".format(filename))
     rgb_image, _ = pcd_to_rgb_and_depth_custom(
         pcd.get_color_pcd_for_visualization(),
         camera_intrinsics,
@@ -54,8 +54,7 @@ if __name__ == "__main__":
     annotations_path = args.annotations_path
 
     loader = loaders[loader_name](path_to_dataset)
-    depth_image = loader.read_depth_image(0)
-    cam_intrinsic = loader.config.get_cam_intrinsic(depth_image.shape)
+    cam_intrinsic = loader.config.get_cam_intrinsic()
     initial_pcd_transform = loader.config.get_initial_pcd_transform()
 
     annotators = []
@@ -84,7 +83,7 @@ if __name__ == "__main__":
 
     track_to_color = {}
 
-    for frame_num in range(start_depth_frame_num, len(loader.depth_images)):
+    for frame_num in range(start_depth_frame_num, loader.get_frame_count()):
         annotation_index = None
         for index, annotation_range in enumerate(annotations_ranges):
             min_frame, max_frame = annotation_range
@@ -114,4 +113,5 @@ if __name__ == "__main__":
 
         previous_pcd = result_pcd
 
-        save_frame(result_pcd, frame_num, output_path, cam_intrinsic, initial_pcd_transform)
+        output_filename = os.path.split(loader.depth_images[frame_num])[-1].split(".")[0]
+        save_frame(result_pcd, output_filename, output_path, cam_intrinsic, initial_pcd_transform)

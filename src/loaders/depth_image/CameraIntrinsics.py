@@ -10,11 +10,12 @@ class CameraIntrinsics:
         self.cx = cx
         self.cy = cy
         self.factor = factor
-        self.open3dIntrinsics = o3d.camera.PinholeCameraIntrinsic(
-            width=width,
-            height=height,
-            fx=fx,  # X-axis focal length
-            fy=fy,  # Y-axis focal length
-            cx=cx,  # X-axis principle point
-            cy=cy  # Y-axis principle point
-        )
+        if fx is not None and fy is not None and cx is not None and cy is not None:
+            self.open3dIntrinsics = o3d.camera.PinholeCameraIntrinsic(
+                width=width,
+                height=height,
+                fx=fx,  # X-axis focal length
+                fy=fy,  # Y-axis focal length
+                cx=cx,  # X-axis principle point
+                cy=cy  # Y-axis principle point
+            )
