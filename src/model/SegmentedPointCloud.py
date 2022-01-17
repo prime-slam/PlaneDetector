@@ -2,11 +2,10 @@ import numpy as np
 import open3d as o3d
 
 from src.model.SegmentedPlane import SegmentedPlane
+from src.utils.colors import UNSEGMENTED_PCD_COLOR_NORMALISED
 
 
 class SegmentedPointCloud:
-
-    UNSEGMENTED_PCD_COLOR = [0, 0, 0]  # [0.5, 0.5, 0.5]
 
     def __init__(
             self,
@@ -18,7 +17,7 @@ class SegmentedPointCloud:
         if pcd is None:
             pcd = o3d.geometry.PointCloud()
         # Without this colors vector will be just empty
-        pcd.paint_uniform_color(SegmentedPointCloud.UNSEGMENTED_PCD_COLOR)
+        pcd.paint_uniform_color(UNSEGMENTED_PCD_COLOR_NORMALISED)
         self.pcd = pcd
 
         if planes is None:
@@ -38,7 +37,7 @@ class SegmentedPointCloud:
 
     def get_color_pcd_for_visualization(self):
         colors = np.asarray(self.pcd.colors)
-        colors[self.unsegmented_cloud_indices] = SegmentedPointCloud.UNSEGMENTED_PCD_COLOR
+        colors[self.unsegmented_cloud_indices] = UNSEGMENTED_PCD_COLOR_NORMALISED
         for plane in self.planes:
             color = plane.normalized_color
             colors[plane.pcd_indices] = color
