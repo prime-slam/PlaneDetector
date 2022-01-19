@@ -29,14 +29,14 @@ class CVATAnnotator(BaseAnnotator):
 
         black_color = np.array([0., 0., 0.])
         black_color_str = color_to_string(black_color)
-        planes_indexes = self.__group_pcd_indexes_by_color(colored_pcd)
+        planes_indices = self.__group_pcd_indexes_by_color(colored_pcd)
 
         planes = []
         global next_track_id
         unsegmented_cloud_indices = None
-        for color_str, indexes in planes_indexes.items():
+        for color_str, indices in planes_indices.items():
             if color_str == black_color_str:
-                unsegmented_cloud_indices = indexes
+                unsegmented_cloud_indices = indices
             else:
                 if color_str in color_to_track:
                     track_id = color_to_track[color_str]
@@ -45,9 +45,14 @@ class CVATAnnotator(BaseAnnotator):
                     color_to_track[color_str] = track_id
                     next_track_id += 1
 
+                indices = np.setdiff1d(
+                    indices,
+                    segmented_pcd.zero_depth_cloud_indices
+                )
+
                 planes.append(
                     SegmentedPlane(
-                        indexes,
+                        indices,
                         track_id,
                         denormalize_color(color_from_string(color_str))
                     )
@@ -56,7 +61,8 @@ class CVATAnnotator(BaseAnnotator):
         return SegmentedPointCloud(
             colored_pcd,
             planes,
-            unsegmented_cloud_indices,
+            unsegmented_cloud_indices=unsegmented_cloud_indices,
+            zero_depth_cloud_indices=segmented_pcd.zero_depth_cloud_indices,
             structured_shape=segmented_pcd.structured_shape
         )
 

@@ -24,6 +24,7 @@ class DDPFFDetector(BaseDetector):
             return SegmentedPointCloud(
                 pcd,
                 planes,
-                outlier_pcd_indices,
+                unsegmented_cloud_indices=outlier_pcd_indices,
+                zero_depth_cloud_indices=segmented_pcd.zero_depth_cloud_indices,
                 structured_shape=segmented_pcd.structured_shape
             )

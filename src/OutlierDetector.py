@@ -23,6 +23,7 @@ def remove_planes_outliers(segmented_pcd: SegmentedPointCloud) -> SegmentedPoint
     return SegmentedPointCloud(
         segmented_pcd.pcd,
         updated_planes,
-        updated_unsegmented_indices,
+        unsegmented_cloud_indices=updated_unsegmented_indices,
+        zero_depth_cloud_indices=segmented_pcd.zero_depth_cloud_indices,
         structured_shape=segmented_pcd.structured_shape
     )

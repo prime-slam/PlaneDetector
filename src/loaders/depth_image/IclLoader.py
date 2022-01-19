@@ -110,6 +110,8 @@ class IclLoader(ImageLoader):
             points[:, 0] = x_modifier * points[:, 2]
             points[:, 1] = y_modifier * points[:, 2]
 
+            zero_depth_indices = np.where(points[:, 2] == 0)[0]
+
             pcd = o3d.geometry.PointCloud()
             pcd.points = o3d.utility.Vector3dVector(points)
             pcd.transform([[-1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
@@ -117,6 +119,7 @@ class IclLoader(ImageLoader):
             return SegmentedPointCloud(
                 pcd=pcd,
                 unsegmented_cloud_indices=np.arange(points.shape[0]),
+                zero_depth_cloud_indices=zero_depth_indices,
                 structured_shape=(cam_intrinsic.height, cam_intrinsic.width)
             )
 

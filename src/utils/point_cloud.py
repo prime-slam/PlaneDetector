@@ -5,14 +5,23 @@ from src.loaders.depth_image.CameraIntrinsics import CameraIntrinsics
 from src.utils.colors import normalize_color_arr
 
 
-def rgb_and_depth_to_pcd_custom(rgb_image, depth_image, camera_intrinsics: CameraIntrinsics, initial_pcd_transform):
-    pcd = depth_to_pcd_custom(depth_image, camera_intrinsics, initial_pcd_transform)
+def rgb_and_depth_to_pcd_custom(
+        rgb_image: np.array,
+        depth_image: np.array,
+        camera_intrinsics: CameraIntrinsics,
+        initial_pcd_transform: list
+) -> (o3d.geometry.PointCloud, np.array):
+    pcd, zero_depth_indices = depth_to_pcd_custom(depth_image, camera_intrinsics, initial_pcd_transform)
     pcd = load_rgb_colors_to_pcd(rgb_image, pcd)
 
-    return pcd
+    return pcd, zero_depth_indices
 
 
-def depth_to_pcd_custom(depth_image, camera_intrinsics: CameraIntrinsics, initial_pcd_transform):
+def depth_to_pcd_custom(
+        depth_image: np.array,
+        camera_intrinsics: CameraIntrinsics,
+        initial_pcd_transform: list
+) -> (o3d.geometry.PointCloud, np.array):
     points = np.zeros((camera_intrinsics.width * camera_intrinsics.height, 3))
 
     column_indices = np.tile(np.arange(camera_intrinsics.width), (camera_intrinsics.height, 1)).flatten()
@@ -22,11 +31,13 @@ def depth_to_pcd_custom(depth_image, camera_intrinsics: CameraIntrinsics, initia
     points[:, 0] = (column_indices - camera_intrinsics.cx) * points[:, 2] / camera_intrinsics.fx
     points[:, 1] = (row_indices - camera_intrinsics.cy) * points[:, 2] / camera_intrinsics.fy
 
+    zero_depth_indices = np.where(points[:, 2] == 0)[0]
+
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(points)
     pcd.transform(initial_pcd_transform)
 
-    return pcd
+    return pcd, zero_depth_indices
 
 
 def load_rgb_colors_to_pcd(rgb_image, pcd: o3d.geometry.PointCloud) -> o3d.geometry.PointCloud:

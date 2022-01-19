@@ -11,3 +11,5 @@ class CompositeBenchmark(BaseBenchmark):
         for benchmark in self.benchmarks:
             benchmark_result = benchmark.execute(cloud_predicted, cloud_gt)
             result += str(benchmark_result) + "\n"
+
+        return result

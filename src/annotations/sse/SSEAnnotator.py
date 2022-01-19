@@ -11,9 +11,9 @@ class SSEAnnotator(BaseAnnotator):
         super().__init__(path, start_frame_num)
         self.annotation = SSEAnnotation(path)
 
-    def annotate(self, pcd: SegmentedPointCloud, frame_num: int) -> SegmentedPointCloud:
+    def annotate(self, segmented_pcd: SegmentedPointCloud, frame_num: int) -> SegmentedPointCloud:
         planes = self.annotation.get_all_planes()
-        pcd_size = np.asarray(pcd.pcd.points).shape[0]
+        pcd_size = np.asarray(segmented_pcd.pcd.points).shape[0]
         all_segmented_indices = []
         segmented_planes = []
         for plane in planes:
@@ -24,10 +24,11 @@ class SSEAnnotator(BaseAnnotator):
             ))
 
         return SegmentedPointCloud(
-            pcd=pcd.pcd,
+            pcd=segmented_pcd.pcd,
             planes=segmented_planes,
             unsegmented_cloud_indices=np.setdiff1d(
                 np.arange(pcd_size),
                 np.concatenate(all_segmented_indices)
-            )
+            ),
+            zero_depth_cloud_indices=segmented_pcd.zero_depth_cloud_indices,
         )

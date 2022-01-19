@@ -50,7 +50,8 @@ class O3DRansacDetector(BaseDetector):
         return SegmentedPointCloud(
             pcd,
             detected_planes,
-            outlier_indices,
+            unsegmented_cloud_indices=outlier_indices,
+            zero_depth_cloud_indices=segmented_pcd.zero_depth_cloud_indices,
             structured_shape=segmented_pcd.structured_shape
         )
 
