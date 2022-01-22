@@ -7,7 +7,7 @@ class PointCloudPrinter:
 
     def save_to_pcd(self, filename):
         assert filename[-4:] == ".pcd"
-        o3d.io.write_point_cloud(filename, self.pcd)
+        o3d.io.write_point_cloud(filename, self.pcd, write_ascii=True)
 
     def save_to_ply(self, filename):
         assert filename[-4:] == ".ply"

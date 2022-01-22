@@ -1,6 +1,5 @@
 from src import OutlierDetector
 from src.annotations.BaseAnnotator import BaseAnnotator
-from src.annotations.cvat import CVATAnnotator
 from src.detectors.BaseDetector import BaseDetector
 from src.loaders.BaseLoader import BaseLoader
 from src.loaders.depth_image.ImageLoader import ImageLoader
@@ -12,10 +11,10 @@ def load_annotations(
         loader: BaseLoader,
         input_pcd: SegmentedPointCloud,
         depth_frame_num,
-        annotator: CVATAnnotator,
+        annotator: BaseAnnotator,
         filter_outliers
 ):
-    if isinstance(annotator, ImageLoader):
+    if isinstance(loader, ImageLoader):
         annotation_frame_num = loader.depth_to_rgb_index[depth_frame_num]
     else:
         annotation_frame_num = depth_frame_num

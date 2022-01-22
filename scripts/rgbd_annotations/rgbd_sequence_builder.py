@@ -113,5 +113,6 @@ if __name__ == "__main__":
 
         previous_pcd = result_pcd
 
-        output_filename = os.path.split(loader.depth_images[frame_num])[-1].split(".")[0]
+        output_filename = os.path.split(loader.depth_images[frame_num])[-1]
+        output_filename = ".".join(output_filename.split(".")[:-1])
         save_frame(result_pcd, output_filename, output_path, cam_intrinsic, initial_pcd_transform)
