@@ -13,7 +13,7 @@ class O3DRansacDetector(BaseDetector):
     @staticmethod
     def detect_plane(pcd: o3d.geometry.PointCloud) -> (np.array, np.array):
         _, inliers = pcd.segment_plane(
-            distance_threshold=0.005,
+            distance_threshold=0.005,  # 0.03,  -- for TUM pioneer
             ransac_n=3,
             num_iterations=1000
         )
