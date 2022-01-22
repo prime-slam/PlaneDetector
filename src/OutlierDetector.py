@@ -6,7 +6,9 @@ from src.model.SegmentedPointCloud import SegmentedPointCloud, SegmentedPlane
 
 def remove_planes_outliers(segmented_pcd: SegmentedPointCloud) -> SegmentedPointCloud:
     updated_planes = []
-    unsegmented_indices_list = [segmented_pcd.unsegmented_cloud_indices]
+    unsegmented_indices_list = []
+    if segmented_pcd.unsegmented_cloud_indices is not None:
+        unsegmented_indices_list.append(segmented_pcd.unsegmented_cloud_indices)
     for plane in segmented_pcd.planes:
         if plane.pcd_indices.size < 3:
             updated_planes.append(SegmentedPlane(plane.pcd_indices, plane.track_id, plane.color))

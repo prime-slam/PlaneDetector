@@ -1,6 +1,8 @@
 import os
 
 import cv2
+import numpy as np
+import open3d as o3d
 
 from scripts.rgbd_annotations.parser import create_input_parser
 from src.FrameProcessor import process_frame
@@ -8,6 +10,7 @@ from src.annotations.cvat.CVATAnnotator import CVATAnnotator
 from src.loaders.depth_image.CameraIntrinsics import CameraIntrinsics
 from src.model.SegmentedPointCloud import SegmentedPointCloud
 from src.assosiators.NaiveIoUAssociator import associate_segmented_point_clouds
+from src.output.PointCloudPrinter import PointCloudPrinter
 from src.parser import loaders
 from src.utils.point_cloud import pcd_to_rgb_and_depth_custom
 
@@ -42,6 +45,18 @@ def save_frame(
         initial_pcd_transform
     )
     cv2.imwrite(image_path, rgb_image)
+
+
+def pick_and_print_point(pcd: o3d.geometry.PointCloud):
+    pts = np.asarray(pcd.points)
+    vis = o3d.visualization.VisualizerWithEditing()
+    vis.create_window()
+    vis.add_geometry(pcd)
+    vis.run()  # user picks points
+    vis.destroy_window()
+    picked = vis.get_picked_points()
+    print(pts[picked[0]])
+    print(pts[picked[1]])
 
 
 if __name__ == "__main__":
@@ -115,4 +130,8 @@ if __name__ == "__main__":
 
         output_filename = os.path.split(loader.depth_images[frame_num])[-1]
         output_filename = ".".join(output_filename.split(".")[:-1])
+        # pick_and_print_point(result_pcd.get_color_pcd_for_visualization())
+        # PointCloudPrinter(result_pcd.get_color_pcd_for_visualization()).save_to_pcd(output_filename + ".pcd")
+        # cv2.imwrite(output_filename + "rgb.png", cv2.imread(loader.rgb_images[loader.depth_to_rgb_index[frame_num]]))
+        # cv2.imwrite(output_filename + "depth.png", cv2.imread(loader.depth_images[frame_num]))
         save_frame(result_pcd, output_filename, output_path, cam_intrinsic, initial_pcd_transform)
