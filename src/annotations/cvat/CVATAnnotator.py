@@ -1,3 +1,4 @@
+import cv2
 import numpy as np
 
 from src.annotations.BaseAnnotator import BaseAnnotator
@@ -23,7 +24,9 @@ class CVATAnnotator(BaseAnnotator):
             raise Exception("CVAT annotation works only for structured pcd")
 
         all_planes = self.annotation.get_all_planes_for_frame(frame_num)
+        all_planes = sorted(all_planes, key=lambda x: x.z)
         annotated_rgb = draw_polygones(all_planes, segmented_pcd.structured_shape)
+        # cv2.imwrite("{}_annot.png".format(frame_num), annotated_rgb)
 
         colored_pcd = load_rgb_colors_to_pcd(annotated_rgb, segmented_pcd.pcd)
 

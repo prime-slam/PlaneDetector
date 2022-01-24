@@ -45,6 +45,7 @@ class CVATAnnotation:
                 else:
                     points = parse_points_from_box(frame)
                 frame_id = int(frame.attrib['frame'])
+                z_order = int(frame.attrib['z_order'])
 
                 if self.min_frame_id is None or frame_id < self.min_frame_id:
                     self.min_frame_id = frame_id
@@ -55,7 +56,7 @@ class CVATAnnotation:
                 if is_outside == 1:
                     continue
 
-                plane = self.Plane(points)
+                plane = self.Plane(points, z_order)
                 planes_track.append(plane, frame_id)
 
             self.tracks.append(planes_track)
@@ -84,6 +85,7 @@ class CVATAnnotation:
             plane.color = self.color
 
     class Plane:
-        def __init__(self, points):
+        def __init__(self, points, z):
             self.points = points
+            self.z = z
             self.color = (0, 0, 0)
