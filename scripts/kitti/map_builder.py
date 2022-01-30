@@ -104,7 +104,11 @@ def get_annot_path_pairs(annot_path):
     return zip(data_filenames, labels_filenames)
 
 
-def map_annotations_to_map(map_pcd: o3d.geometry.PointCloud, path_to_annot: str, labels_filename: str) -> np.array:
+def map_annotations_to_map(
+        map_pcd: o3d.geometry.PointCloud,
+        path_to_annot: str,
+        labels_filename: str
+) -> np.array:
     map_points_count = np.asarray(map_pcd.points).shape[0]
     kd_tree = KDTree(np.asarray(map_pcd.points))
     next_free_id = 1  # skip 0 for void label
@@ -120,38 +124,25 @@ def map_annotations_to_map(map_pcd: o3d.geometry.PointCloud, path_to_annot: str,
             plane_map_indices = data_indices[plane_indices]
             map_annot_indices[plane_map_indices] = plane_id
 
-    SSEAnnotation.save_to_file(map_annot_indices, labels_filename)
+    if labels_filename.endswith(".npy"):
+        np.save(labels_filename, map_annot_indices)
+    else:
+        SSEAnnotation.save_to_file(map_annot_indices, labels_filename)
     print("Last used plane id: {}".format(next_free_id - 1))
 
     return map_annot_indices
 
 
-def build_bbox(x_min, x_max, y_min, y_max, z_min, z_max):
-    pts = []
-    for x in [x_min, x_max]:
-        for y in [y_min, y_max]:
-            for z in [z_min, z_max]:
-                pts.append([x, y, z])
-
-    return np.asarray(pts)
-
-
-def get_bboxes_of_parts(full_bbox: o3d.geometry.AxisAlignedBoundingBox) -> np.array:
+def get_bboxes_bounds_of_parts(full_bbox: o3d.geometry.AxisAlignedBoundingBox, step: int) -> np.array:
     min_x, min_y, min_z = full_bbox.get_min_bound()
     max_x, max_y, max_z = full_bbox.get_max_bound()
-    # min_y = np.min(full_bbox, axis=1)
-    # max_x = np.min(full_bbox, axis=1)
-    # max_y = np.min(full_bbox, axis=1)
-    # min_z = np.min(full_bbox, axis=1)
-    # max_z = np.min(full_bbox, axis=1)
-    bboxes = []
-    for x in np.arange(min_x, max_x, 150):
-        for y in np.arange(min_y, max_y, 150):
-            bbox_points = build_bbox(x, x + 150, y, y + 150, min_z, max_z)
-            bbox_points_o3d = o3d.utility.Vector3dVector(bbox_points)
-            bboxes.append(o3d.geometry.AxisAlignedBoundingBox.create_from_points(bbox_points_o3d))
+    bboxes_bounds = []
+    for x in np.arange(min_x, max_x, step):
+        for z in np.arange(min_z, max_z, step):  # we use z as second horizontal axis because of kitty orientation
+            bbox_bounds = [(x, min_y, z), (x + step, max_y, z + step)]
+            bboxes_bounds.append(bbox_bounds)
 
-    return bboxes
+    return bboxes_bounds
 
 
 if __name__ == "__main__":
@@ -159,10 +150,11 @@ if __name__ == "__main__":
     path_to_poses = sys.argv[2]
     path_to_calib = sys.argv[3]
     path_to_annot = sys.argv[4]
+    parts_output_path = sys.argv[5]
     debug = False
 
     map_filename = "map.pcd"
-    annot_filename = "map.pcd.labels"
+    annot_filename = "map.pcd.labels.npy"
 
     if os.path.isfile(map_filename):
         map_pcd = o3d.io.read_point_cloud(map_filename)
@@ -188,10 +180,9 @@ if __name__ == "__main__":
         print("Super low map ready - it has {} points".format(np.asarray(low_map.points).shape[0]))
 
     if os.path.isfile(annot_filename):
-        annotation = SSEAnnotation(annot_filename)
-        map_annot_indices = annotation.load_labels()
+        map_annot_labels = np.load(annot_filename)
     else:
-        map_annot_indices = map_annotations_to_map(map_pcd, path_to_annot, annot_filename)
+        map_annot_labels = map_annotations_to_map(map_pcd, path_to_annot, annot_filename)
     print("Annotations loaded to map")
 
     if debug:
@@ -201,7 +192,28 @@ if __name__ == "__main__":
     map_bbox = map_pcd.get_axis_aligned_bounding_box()
     bbox_points = np.asarray(map_bbox.get_box_points())
     print(bbox_points)
-    bboxes = get_bboxes_of_parts(map_bbox)
-    # for bbox in bboxes:
-    #     part_pcd = map_pcd.crop(bbox)
+    bboxes_bounds = get_bboxes_bounds_of_parts(map_bbox, step=150)
+    map_points = np.asarray(map_pcd.points)
+    for bbox_bounds in bboxes_bounds:
+        min_x, min_y, min_z = bbox_bounds[0]
+        max_x, max_y, max_z = bbox_bounds[1]
+        fit_in_part = np.zeros_like(map_points, dtype=bool)
+        fit_in_part[:, 0] = np.logical_and(map_points[:, 0] < max_x, map_points[:, 0] >= min_x)
+        fit_in_part[:, 1] = np.logical_and(map_points[:, 1] < max_y, map_points[:, 1] >= min_y)
+        fit_in_part[:, 2] = np.logical_and(map_points[:, 2] < max_z, map_points[:, 2] >= min_z)
+        part_indices = np.where(np.all(fit_in_part, axis=-1))[0]
 
+        if part_indices.size < 1000:
+            print("BBox {0}_{1}_{2}_{3} is too small!".format(int(min_x), int(max_x), int(min_z), int(max_z)))
+            continue
+
+        part_pcd = map_pcd.select_by_index(part_indices)
+        part_annot = map_annot_labels[part_indices]
+
+        part_pcd_filename = "part_{0}_{1}_{2}_{3}.pcd".format(int(min_x), int(max_x), int(min_z), int(max_z))
+        part_pcd_filename = os.path.join(parts_output_path, part_pcd_filename)
+        o3d.io.write_point_cloud(part_pcd_filename, part_pcd)
+        SSEAnnotation.save_to_file(part_annot, "{}.labels".format(part_pcd_filename))
+        print("BBox {0}_{1}_{2}_{3} ready!".format(int(min_x), int(max_x), int(min_z), int(max_z)))
+
+    print("All parts prepared!")
