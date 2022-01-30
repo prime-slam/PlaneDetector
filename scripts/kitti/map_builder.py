@@ -209,11 +209,25 @@ if __name__ == "__main__":
 
         part_pcd = map_pcd.select_by_index(part_indices)
         part_annot = map_annot_labels[part_indices]
+        # Fix labels -- we need unique only among this part to prevent label overflow in sse
+        # Add zero to the beginning because we always need void label to have zero label
+        part_annot = np.concatenate([np.asarray([0]), part_annot])
+        unique_labels, unique_labels_indices = np.unique(part_annot, return_inverse=True)
+        # remove added zero
+        part_annot = unique_labels_indices[1:]
 
-        part_pcd_filename = "part_{0}_{1}_{2}_{3}.pcd".format(int(min_x), int(max_x), int(min_z), int(max_z))
+        part_pcd_filename = "part_{0}_{1}_{2}_{3}_u{4}.pcd".format(
+            int(min_x), int(max_x),
+            int(min_z), int(max_z),
+            unique_labels.size
+        )
         part_pcd_filename = os.path.join(parts_output_path, part_pcd_filename)
         o3d.io.write_point_cloud(part_pcd_filename, part_pcd)
         SSEAnnotation.save_to_file(part_annot, "{}.labels".format(part_pcd_filename))
-        print("BBox {0}_{1}_{2}_{3} ready!".format(int(min_x), int(max_x), int(min_z), int(max_z)))
+        print("BBox {0}_{1}_{2}_{3}_u{4} ready!".format(
+            int(min_x), int(max_x),
+            int(min_z), int(max_z),
+            unique_labels.size
+        ))
 
     print("All parts prepared!")
