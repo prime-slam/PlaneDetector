@@ -76,11 +76,16 @@ class SSEAnnotation:
         return planes_ids
 
     @staticmethod
-    def save_to_file(labels, filename):
+    def save_to_file(labels, common_filename):
+        labels_filename = "{}.labels".format(common_filename)
+        objects_filename = "{}.objects".format(common_filename)
         labels_string = "[" + ",".join([str(label) for label in labels]) + "]"
-        with open(filename, "wb") as label_file:
+        with open(labels_filename, "wb") as label_file:
             compressed_labels_string = FIC.compress(LZW.compress(labels_string))
             label_file.write(b"".join(compressed_labels_string))
+        with open(objects_filename, "wb") as object_file:
+            compressed_objects_string = FIC.compress(LZW.compress("[]"))
+            object_file.write(b"".join(compressed_objects_string))
 
 
 def cloud_to_map(
@@ -237,7 +242,7 @@ if __name__ == "__main__":
             poses,
             path_to_annot,
             path_to_annot_poses,
-            "super_low_map.pcd.labels"
+            "super_low_map.pcd"
         )
         print("Annotations loaded to low map")
 
@@ -288,7 +293,7 @@ if __name__ == "__main__":
         part_pcd_filename = "part_{}.pcd".format(bbox_str_with_unique)
         part_pcd_filename = os.path.join(parts_output_path, part_pcd_filename)
         o3d.io.write_point_cloud(part_pcd_filename, part_pcd)
-        SSEAnnotation.save_to_file(part_annot, "{}.labels".format(part_pcd_filename))
+        SSEAnnotation.save_to_file(part_annot, part_pcd_filename)
         print("BBox {} ready!".format(bbox_str_with_unique))
 
     print("All parts prepared!")
