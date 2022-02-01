@@ -4,8 +4,39 @@ import sys
 import numpy as np
 import open3d as o3d
 from pykdtree.kdtree import KDTree
+from sklearn.cluster import DBSCAN
 
 from scripts.kitti.map_builder import KittiLoader, load_poses, load_calib_matrix, SSEAnnotation, cloud_to_map
+
+
+def dbscan_labels(pcd: o3d.geometry.PointCloud, labels: np.array) -> np.array:
+    unique_labels, labels_in_unique_indices = np.unique(labels, return_inverse=True)
+    result_labels = np.zeros_like(labels)
+    for label_index, label in enumerate(unique_labels):
+        if label == 0:
+            continue
+
+        label_indices = np.where(labels_in_unique_indices == label_index)[0]
+        label_points = np.asarray(pcd.points)[label_indices]
+        clustering = DBSCAN(eps=0.5).fit(label_points)
+        unique_components, counts = np.unique(clustering.labels_, return_counts=True)
+        if unique_components.size == 1:
+            if unique_components[0] == -1:
+                continue
+            else:
+                most_frequent_positive_id = unique_components[0]
+        else:
+            most_frequent_component_ids = unique_components[np.argpartition(-counts, kth=1)[:2]]
+            for component_id in most_frequent_component_ids:
+                if component_id >= 0:
+                    most_frequent_positive_id = component_id
+                    break
+        component_indices = np.where(clustering.labels_ == most_frequent_positive_id)[0]
+        component_indices_in_part = label_indices[component_indices]
+        result_labels[component_indices_in_part] = label
+
+    print("Removed: {0}/{1}".format(np.count_nonzero(labels - result_labels), np.count_nonzero(labels)))
+    return result_labels
 
 
 def build_map(parts_path) -> (o3d.geometry.PointCloud, np.array):
@@ -37,8 +68,9 @@ def annotate_frame_with_map(
         calib_matrix: np.array
 ) -> np.array:
     mapped_frame_pcd = cloud_to_map(frame_pcd, transform_matrix, calib_matrix)
-    frame_indices_in_map = map_kd_tree.query(np.asarray(mapped_frame_pcd.points))[1]
-    # map_labels = np.concatenate([map_labels, np.asarray([0])])
+    frame_indices_in_map = map_kd_tree.query(np.asarray(mapped_frame_pcd.points), distance_upper_bound=0.2)[1]
+    # points with no reference will be marked with len(mapped_frame_pcd) index, so add zero to this index
+    map_labels = np.concatenate([map_labels, np.asarray([0])])
     return map_labels[frame_indices_in_map], frame_indices_in_map
 
 
@@ -55,6 +87,7 @@ if __name__ == "__main__":
     calib_matrix = load_calib_matrix(path_to_calib)
 
     map_pcd, map_labels = build_map(map_parts_path)
+    map_labels = dbscan_labels(map_pcd, map_labels)
     map_kd_tree = KDTree(np.asarray(map_pcd.points))
 
     if debug:
@@ -66,7 +99,8 @@ if __name__ == "__main__":
         frame_pcd = loader.read_pcd(frame_id)
         transform_matrix = poses[frame_id]
         frame_labels, frame_indices_in_map = annotate_frame_with_map(frame_pcd, map_kd_tree, map_labels, transform_matrix, calib_matrix)
-
+        frame_labels_ref = frame_labels[np.where(frame_indices_in_map != map_labels.size)[0]]
+        frame_indices_in_map = frame_indices_in_map[np.where(frame_indices_in_map != map_labels.size)[0]]
         output_filename = "label-{:06d}.npy".format(frame_id)
         np.save(os.path.join(output_path, output_filename), frame_labels)
 
@@ -76,7 +110,7 @@ if __name__ == "__main__":
             _, unique_indices = np.unique(frame_indices_in_map, return_index=True)
             ref_pcd = map_pcd.select_by_index(frame_indices_in_map[unique_indices])
             o3d.io.write_point_cloud(os.path.join(output_path, ref_pcd_filename), ref_pcd)
-            ref_labels = frame_labels[unique_indices]
+            ref_labels = frame_labels_ref[unique_indices]
             SSEAnnotation.save_to_file(ref_labels, os.path.join(output_path, ref_pcd_filename))
             SSEAnnotation.save_to_file(frame_labels, os.path.join(output_path, pcd_filename))
             o3d.io.write_point_cloud(os.path.join(output_path, pcd_filename), frame_pcd)
