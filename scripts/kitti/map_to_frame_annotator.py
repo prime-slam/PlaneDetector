@@ -40,24 +40,24 @@ def dbscan_labels(pcd: o3d.geometry.PointCloud, labels: np.array) -> np.array:
 
 
 def build_map(parts_path) -> (o3d.geometry.PointCloud, np.array):
-    # data_filenames = [
-    #     os.path.join(parts_path, filename) for filename in os.listdir(parts_path) if filename.endswith(".pcd")
-    # ]
-    # max_used_plane_id = 0
-    # map_pcd = o3d.geometry.PointCloud()
-    # map_labels_list = []
-    # labels_filenames = [filename + ".labels" for filename in data_filenames]
-    # for data_filename, label_filename in zip(data_filenames, labels_filenames):
-    #     data_pcd = o3d.io.read_point_cloud(data_filename)
-    #     labels = SSEAnnotation(label_filename).load_labels()
-    #     is_null_labels = labels != 0
-    #     labels = (labels + max_used_plane_id) * is_null_labels
-    #     max_used_plane_id = max(max_used_plane_id, np.max(labels))
-    #     map_pcd += data_pcd
-    #     map_labels_list.append(labels)
-    #
-    # return map_pcd, np.concatenate(map_labels_list)
-    return o3d.io.read_point_cloud("map.pcd"), np.load("map.pcd.labels.npy")
+    data_filenames = [
+        os.path.join(parts_path, filename) for filename in os.listdir(parts_path) if filename.endswith(".pcd")
+    ]
+    max_used_plane_id = 0
+    map_pcd = o3d.geometry.PointCloud()
+    map_labels_list = []
+    labels_filenames = [filename + ".labels" for filename in data_filenames]
+    for data_filename, label_filename in zip(data_filenames, labels_filenames):
+        data_pcd = o3d.io.read_point_cloud(data_filename)
+        labels = SSEAnnotation(label_filename).load_labels()
+        is_null_labels = labels != 0
+        labels = (labels + max_used_plane_id) * is_null_labels
+        max_used_plane_id = max(max_used_plane_id, np.max(labels))
+        map_pcd += data_pcd
+        map_labels_list.append(labels)
+
+    return map_pcd, np.concatenate(map_labels_list)
+    # return o3d.io.read_point_cloud("map.pcd"), np.load("map.pcd.labels.npy")
 
 
 def annotate_frame_with_map(
@@ -68,7 +68,16 @@ def annotate_frame_with_map(
         calib_matrix: np.array
 ) -> np.array:
     mapped_frame_pcd = cloud_to_map(frame_pcd, transform_matrix, calib_matrix)
-    frame_indices_in_map = map_kd_tree.query(np.asarray(mapped_frame_pcd.points), distance_upper_bound=0.2)[1]
+
+    # map_pcd.paint_uniform_color([0, 0, 0])
+    # labels_unique = np.unique(map_labels)
+    # colors = np.concatenate([np.asarray([[0,0,0]]), np.random.rand(labels_unique.size, 3)])
+    # map_colors = colors[map_labels]
+    # map_pcd.colors = o3d.utility.Vector3dVector(map_colors)
+    # mapped_frame_pcd.paint_uniform_color([1, 0, 0])
+    # o3d.visualization.draw_geometries([map_pcd, mapped_frame_pcd])
+
+    frame_indices_in_map = map_kd_tree.query(np.asarray(mapped_frame_pcd.points), distance_upper_bound=0.5)[1]
     # points with no reference will be marked with len(mapped_frame_pcd) index, so add zero to this index
     map_labels = np.concatenate([map_labels, np.asarray([0])])
     return map_labels[frame_indices_in_map], frame_indices_in_map

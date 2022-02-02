@@ -129,6 +129,7 @@ def map_annotations_to_map(
         segment_labels = annot.load_labels()
         is_zero_label = segment_labels != 0
         segment_labels = (segment_labels + last_used_id) * is_zero_label
+        first_used_id = last_used_id + 1
         last_used_id = max(np.max(segment_labels), last_used_id)
         start_frame = int(os.path.split(data_path)[-1].split("_")[1])
         end_frame = int(os.path.split(data_path)[-1].split("_")[2])
@@ -143,12 +144,14 @@ def map_annotations_to_map(
             frame_pcd = loader.read_pcd(frame_num)
             frame_map_transform_matrix = map_poses[frame_num]
             frame_pcd_mapped_to_map = cloud_to_map(frame_pcd, frame_map_transform_matrix, calib_matrix)
-            frame_map_indices = map_tree.query(np.asarray(frame_pcd_mapped_to_map.points))[1]
-            frame_labels_not_null_indices = np.where(frame_labels > 0)[0]
+            frame_map_indices = map_tree.query(np.asarray(frame_pcd_mapped_to_map.points), distance_upper_bound=0.2)[1]
+            frame_labels_not_null_indices = np.where(
+                np.logical_and(frame_labels > 0, frame_map_indices < map_points_count)
+            )[0]
             frame_map_indices_not_null = frame_map_indices[frame_labels_not_null_indices]
             map_annot_indices[frame_map_indices_not_null] = frame_labels[frame_labels_not_null_indices]
 
-        print("Annotations from {} loaded!".format(data_path))
+        print("Annotations from {0} loaded! Use plane ids: from {1} to {2}".format(data_path, first_used_id, last_used_id))
 
     if labels_filename.endswith(".npy"):
         np.save(labels_filename, map_annot_indices)
@@ -232,6 +235,7 @@ if __name__ == "__main__":
             path_to_annot_poses,
             annot_filename
         )
+    # map_annot_labels = np.zeros((np.asarray(map_pcd.points).shape[0]), dtype=np.intc)
     print("Annotations loaded to map")
 
     if debug:
