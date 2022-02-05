@@ -48,14 +48,19 @@ class CVATAnnotator(BaseAnnotator):
                     color_to_track[color_str] = track_id
                     next_track_id += 1
 
-                indices = np.setdiff1d(
+                not_zero_indices = np.setdiff1d(
                     indices,
                     segmented_pcd.zero_depth_cloud_indices
+                )
+                zero_indices = np.setdiff1d(
+                    indices,
+                    not_zero_indices
                 )
 
                 planes.append(
                     SegmentedPlane(
-                        indices,
+                        not_zero_indices,
+                        zero_indices,
                         track_id,
                         denormalize_color(color_from_string(color_str))
                     )

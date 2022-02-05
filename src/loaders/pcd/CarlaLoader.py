@@ -44,6 +44,7 @@ class CarlaLoader(BaseLoader):
             plane_indices = np.where(loaded_labels == plane_id)[0]
             planes.append(SegmentedPlane(
                 pcd_indices=plane_indices,
+                zero_depth_pcd_indices=np.asarray([], dtype=int),
                 track_id=SegmentedPlane.NO_TRACK
             ))
 

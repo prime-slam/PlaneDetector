@@ -8,6 +8,7 @@ from scripts.rgbd_annotations.parser import create_input_parser
 from src.FrameProcessor import process_frame
 from src.annotations.cvat.CVATAnnotator import CVATAnnotator
 from src.loaders.depth_image.CameraIntrinsics import CameraIntrinsics
+from src.model.SegmentedPlane import SegmentedPlane
 from src.model.SegmentedPointCloud import SegmentedPointCloud
 from src.assosiators.NaiveIoUAssociator import associate_segmented_point_clouds
 from src.output.PointCloudPrinter import PointCloudPrinter
@@ -134,4 +135,19 @@ if __name__ == "__main__":
         # PointCloudPrinter(result_pcd.get_color_pcd_for_visualization()).save_to_pcd(output_filename + ".pcd")
         # cv2.imwrite(output_filename + "rgb.png", cv2.imread(loader.rgb_images[loader.depth_to_rgb_index[frame_num]]))
         # cv2.imwrite(output_filename + "depth.png", cv2.imread(loader.depth_images[frame_num]))
+
+        def filter_tum_planes(plane: SegmentedPlane) -> bool:
+            result_points = np.asarray(result_pcd.pcd.points)
+            plane_points = result_points[plane.pcd_indices]
+            distances_from_cam = np.sqrt(np.sum(plane_points ** 2, axis=-1))
+            mean_distance = np.mean(distances_from_cam)
+            is_zero_twice_bigger = plane.zero_depth_pcd_indices.size / 2 > plane.pcd_indices.size
+            # print("Distance: {0}. Size of zero: {1}. Size of plane: {2}".format(
+            #     mean_distance,
+            #     plane.zero_depth_pcd_indices.size,
+            #     plane.pcd_indices.size
+            # ))
+            return mean_distance < 3 and not is_zero_twice_bigger
+
+        result_pcd.filter_planes(filter_tum_planes)
         save_frame(result_pcd, output_filename, output_path, cam_intrinsic, initial_pcd_transform)

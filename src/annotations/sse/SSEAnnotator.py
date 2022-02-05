@@ -20,6 +20,7 @@ class SSEAnnotator(BaseAnnotator):
             all_segmented_indices.append(plane.indices)
             segmented_planes.append(SegmentedPlane(
                 pcd_indices=plane.indices,
+                zero_depth_pcd_indices=np.asarray([], dtype=int),
                 track_id=SegmentedPlane.NO_TRACK
             ))
 

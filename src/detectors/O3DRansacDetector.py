@@ -39,7 +39,13 @@ class O3DRansacDetector(BaseDetector):
                 inlier_indices  # but in global index system
             )
             outlier_pcd = outlier_pcd.select_by_index(outliers)
-            detected_planes.append(SegmentedPlane(inlier_indices, SegmentedPlane.NO_TRACK))
+            detected_planes.append(
+                SegmentedPlane(
+                    inlier_indices,
+                    zero_depth_pcd_indices=np.asarray([], dtype=int),
+                    track_id=SegmentedPlane.NO_TRACK
+                )
+            )
             detected_indices.append(inlier_indices)
 
         outlier_indices = np.setdiff1d(

@@ -14,7 +14,13 @@ class DDPFFDetector(BaseDetector):
             for line in planes_input:
                 plane_indices = np.asarray([int(index) for index in line.split(" ")[:-1]])
                 all_plane_indices.update(plane_indices)
-                planes.append(SegmentedPlane(plane_indices, SegmentedPlane.NO_TRACK))
+                planes.append(
+                    SegmentedPlane(
+                        plane_indices,
+                        zero_depth_pcd_indices=np.asarray([], dtype=int),
+                        track_id=SegmentedPlane.NO_TRACK
+                    )
+                )
 
             outlier_pcd_indices = np.setdiff1d(
                 np.arange(np.asarray(pcd.points).shape[0]),
