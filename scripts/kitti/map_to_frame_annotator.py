@@ -9,9 +9,33 @@ from sklearn.cluster import DBSCAN
 from scripts.kitti.map_builder import KittiLoader, load_poses, load_calib_matrix, SSEAnnotation, cloud_to_map
 
 
+def save_debug_pcd(map_pcd: o3d.geometry.PointCloud, label_indices, label, color_indices: list):
+    pcd = o3d.geometry.PointCloud()
+    pcd_on_map = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(np.asarray(map_pcd.points)[label_indices])
+    pcd_on_map.points = o3d.utility.Vector3dVector(np.asarray(map_pcd.points))
+    pcd.paint_uniform_color([0, 0, 0])
+    pcd_on_map.paint_uniform_color([0, 0, 0])
+    colors = np.random.rand(len(color_indices), 3)
+    tmp_colors = np.asarray(pcd.colors)
+    tmp_map_colors = np.asarray(pcd_on_map.colors)
+    for ind, color_ind in enumerate(color_indices):
+        color = colors[ind]
+        tmp_colors[color_ind] = color
+        tmp_map_colors[label_indices[color_ind]] = color
+    pcd.colors = o3d.utility.Vector3dVector(tmp_colors)
+    pcd_on_map.colors = o3d.utility.Vector3dVector(tmp_map_colors)
+    o3d.io.write_point_cloud(os.path.join("debug", "{}.pcd".format(label)), pcd)
+    o3d.io.write_point_cloud(os.path.join("debug_map", "{}.pcd".format(label)), pcd_on_map)
+
+
 def dbscan_labels(pcd: o3d.geometry.PointCloud, labels: np.array) -> np.array:
     unique_labels, labels_in_unique_indices = np.unique(labels, return_inverse=True)
     result_labels = np.zeros_like(labels)
+    problem_counter = 0
+    many_clusters = []
+    cluster_sizes = []
+    full_minus_one = 0
     for label_index, label in enumerate(unique_labels):
         if label == 0:
             continue
@@ -20,22 +44,51 @@ def dbscan_labels(pcd: o3d.geometry.PointCloud, labels: np.array) -> np.array:
         label_points = np.asarray(pcd.points)[label_indices]
         clustering = DBSCAN(eps=0.5).fit(label_points)
         unique_components, counts = np.unique(clustering.labels_, return_counts=True)
+        is_problem = True
         if unique_components.size == 1:
             if unique_components[0] == -1:
+                full_minus_one += 1
+                # save_debug_pcd(pcd, label_indices, label, [])
                 continue
             else:
-                most_frequent_positive_id = unique_components[0]
+                is_problem = False
+                # most_frequent_positive_id = unique_components[0]
         else:
-            most_frequent_component_ids = unique_components[np.argpartition(-counts, kth=1)[:2]]
-            for component_id in most_frequent_component_ids:
-                if component_id >= 0:
-                    most_frequent_positive_id = component_id
-                    break
-        component_indices = np.where(clustering.labels_ == most_frequent_positive_id)[0]
+            if unique_components.size == 2 and -1 in unique_components:
+                is_problem = False
+            else:
+                cmp_cnt = 0
+                cluster_size = []
+                color_indices = []
+                for ind, cmp in enumerate(unique_components):
+                    if cmp != -1:
+                        cmp_cnt += 1
+                        cluster_size.append(counts[ind])
+                        color_indices.append(np.where(clustering.labels_ == cmp)[0])
+                many_clusters.append(cmp_cnt)
+                cluster_sizes.append(cluster_size)
+                # save_debug_pcd(pcd, label_indices, label, color_indices)
+            # most_frequent_component_ids = unique_components[np.argpartition(-counts, kth=1)[:2]]
+            # for component_id in most_frequent_component_ids:
+            #     if component_id >= 0:
+            #         most_frequent_positive_id = component_id
+            #         break
+
+        if is_problem:
+            problem_counter += 1
+
+        # component_indices = np.where(clustering.labels_ == most_frequent_positive_id)[0]
+        component_indices = np.where(clustering.labels_ != -1)[0]
         component_indices_in_part = label_indices[component_indices]
         result_labels[component_indices_in_part] = label
 
     print("Removed: {0}/{1}".format(np.count_nonzero(labels - result_labels), np.count_nonzero(labels)))
+    print("Problem labels: {0}/{1}".format(problem_counter, unique_labels.size))
+    print("Full_minus_one: {}".format(full_minus_one))
+    print("Group size with count:")
+    vals, counts_vals = np.unique(np.asarray(many_clusters), return_counts=True)
+    for tmp1, tmp2 in zip(vals, counts_vals):
+        print("{}: {}".format(tmp1, tmp2))
     return result_labels
 
 
@@ -44,6 +97,7 @@ def build_map(parts_path) -> (o3d.geometry.PointCloud, np.array):
         os.path.join(parts_path, filename) for filename in os.listdir(parts_path) if filename.endswith(".pcd")
     ]
     max_used_plane_id = 0
+    prev_max_used_plane_id = 0
     map_pcd = o3d.geometry.PointCloud()
     map_labels_list = []
     labels_filenames = [filename + ".labels" for filename in data_filenames]
@@ -52,7 +106,10 @@ def build_map(parts_path) -> (o3d.geometry.PointCloud, np.array):
         labels = SSEAnnotation(label_filename).load_labels()
         is_null_labels = labels != 0
         labels = (labels + max_used_plane_id) * is_null_labels
+        prev_max_used_plane_id = max_used_plane_id
         max_used_plane_id = max(max_used_plane_id, np.max(labels))
+        if prev_max_used_plane_id + 1 - max_used_plane_id < 0:
+            print("'{0}': ({1}, {2})".format(os.path.split(data_filename)[-1], prev_max_used_plane_id + 1, max_used_plane_id))
         map_pcd += data_pcd
         map_labels_list.append(labels)
 
