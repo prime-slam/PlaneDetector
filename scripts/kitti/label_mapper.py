@@ -3,7 +3,7 @@ import os
 import open3d as o3d
 
 if __name__ == "__main__":
-    path_dir = "debug_map"
+    path_dir = "debug"
     filenames = sorted(os.listdir(path_dir), key=lambda x: int(x.split(".")[0]))
     #
     # parts = {
@@ -45,8 +45,8 @@ if __name__ == "__main__":
             if min_val <= label_id <= max_val:
                 res[key].append(label_id - min_val)
 
+    # label VOID isn't used anywhere for this task
     label_names = [
-        "VOID",
         "Road",
         "Sidewalk",
         "Parking",
