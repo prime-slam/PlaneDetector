@@ -53,6 +53,11 @@ class TumLoader(ImageLoader):
 
             depth_index += 1
 
+        # Fix case when the last timestamp was for depth img
+        while depth_index < len(depth_filenames):
+            depth_to_rgb_index.append(rgb_index - 1)
+            depth_index += 1
+
         return depth_to_rgb_index
 
     class TumCameraConfig(CameraConfig):

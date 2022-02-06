@@ -121,7 +121,7 @@ if __name__ == "__main__":
         )
 
         # First frame of not first annotation have to be associated with previous pcd
-        if frame_num == annotations_ranges[annotation_index][0] and previous_pcd is not None:
+        if annotation_frame_num == annotations_ranges[annotation_index][0] and previous_pcd is not None:
             track_indices_matches = associate_segmented_point_clouds(previous_pcd, result_pcd)
         elif track_indices_matches is not None:
             update_track_indices(result_pcd, track_indices_matches)
@@ -157,4 +157,4 @@ if __name__ == "__main__":
 
         result_pcd.filter_planes(filter_tum_planes)
         save_frame(result_pcd, output_filename, output_path, cam_intrinsic, initial_pcd_transform)
-        break
+        # break
