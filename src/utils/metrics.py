@@ -4,28 +4,27 @@ import open3d as o3d
 from src.model.SegmentedPlane import SegmentedPlane
 
 
-def planes_intersection_indices(plane_left: SegmentedPlane, plane_right: SegmentedPlane) -> np.array:
-    pcd_left_indices = plane_left.pcd_indices
-    pcd_right_indices = plane_right.pcd_indices
-    intersection_indices = np.intersect1d(pcd_left_indices, pcd_right_indices)
+def get_dictionary_indices_of_current_label(indices_array: np.ndarray) -> dict:
+    dictionary = {}
 
-    return intersection_indices
+    for index, value in enumerate(indices_array):
+        if value in dictionary:
+            dictionary[value] = np.append(dictionary[value], index)
+        else:
+            dictionary[value] = np.array(index)
+
+    return dictionary
+
+
+def planes_intersection_indices(plane_left: np.ndarray, plane_right: np.ndarray) -> np.array:
+    return np.intersect1d(plane_left, plane_right)
 
 
 def planes_union_indices(
-        plane_left: SegmentedPlane,
-        plane_right: SegmentedPlane,
-        intersection_indices: np.array = None
+        plane_left: np.ndarray,
+        plane_right: np.ndarray,
 ) -> np.array:
-    if intersection_indices is None:
-        intersection_indices = planes_intersection_indices(plane_left, plane_right)
-
-    only_left_indices = np.setdiff1d(
-        plane_left.pcd_indices,
-        intersection_indices
-    )
-
-    return np.concatenate((only_left_indices, plane_right.pcd_indices))
+    return np.union1d(plane_left, plane_right)
 
 
 def are_nearly_overlapped(plane_predicted: SegmentedPlane, plane_gt: SegmentedPlane, required_overlap: float):
@@ -42,4 +41,3 @@ def are_nearly_overlapped(plane_predicted: SegmentedPlane, plane_gt: SegmentedPl
     predicted_size = plane_predicted.pcd_indices.size
 
     return intersection_size / predicted_size >= required_overlap and intersection_size / gt_size >= required_overlap
-
