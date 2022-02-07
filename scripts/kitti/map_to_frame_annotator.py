@@ -29,6 +29,18 @@ def save_debug_pcd(map_pcd: o3d.geometry.PointCloud, label_indices, label, color
     o3d.io.write_point_cloud(os.path.join("debug_map", "{}.pcd".format(label)), pcd_on_map)
 
 
+def visualize_pcd_labels(pcd: o3d.geometry.PointCloud, labels: np.array, filename: str = None):
+    colors = np.concatenate([np.asarray([[0, 0, 0]]), np.random.rand(np.max(labels), 3)])
+    pcd_for_vis = o3d.geometry.PointCloud()
+    pcd_for_vis.points = o3d.utility.Vector3dVector(np.asarray(pcd.points))
+    pcd_for_vis.paint_uniform_color([0, 0, 0])
+    pcd_for_vis.colors = o3d.utility.Vector3dVector(colors[labels])
+    if filename is None:
+        o3d.visualization.draw_geometries([pcd_for_vis])
+    else:
+        o3d.io.write_point_cloud(filename, pcd_for_vis)
+
+
 def dbscan_labels(pcd: o3d.geometry.PointCloud, labels: np.array) -> np.array:
     unique_labels, labels_in_unique_indices = np.unique(labels, return_inverse=True)
     result_labels = np.zeros_like(labels)
@@ -48,11 +60,11 @@ def dbscan_labels(pcd: o3d.geometry.PointCloud, labels: np.array) -> np.array:
         if unique_components.size == 1:
             if unique_components[0] == -1:
                 full_minus_one += 1
-                # save_debug_pcd(pcd, label_indices, label, [])
+                if debug_miss_clicks:
+                    save_debug_pcd(pcd, label_indices, label, [])
                 continue
             else:
                 is_problem = False
-                # most_frequent_positive_id = unique_components[0]
         else:
             if unique_components.size == 2 and -1 in unique_components:
                 is_problem = False
@@ -67,17 +79,12 @@ def dbscan_labels(pcd: o3d.geometry.PointCloud, labels: np.array) -> np.array:
                         color_indices.append(np.where(clustering.labels_ == cmp)[0])
                 many_clusters.append(cmp_cnt)
                 cluster_sizes.append(cluster_size)
-                # save_debug_pcd(pcd, label_indices, label, color_indices)
-            # most_frequent_component_ids = unique_components[np.argpartition(-counts, kth=1)[:2]]
-            # for component_id in most_frequent_component_ids:
-            #     if component_id >= 0:
-            #         most_frequent_positive_id = component_id
-            #         break
+                if debug_miss_clicks:
+                    save_debug_pcd(pcd, label_indices, label, color_indices)
 
         if is_problem:
             problem_counter += 1
 
-        # component_indices = np.where(clustering.labels_ == most_frequent_positive_id)[0]
         component_indices = np.where(clustering.labels_ != -1)[0]
         component_indices_in_part = label_indices[component_indices]
         result_labels[component_indices_in_part] = label
@@ -128,7 +135,7 @@ def annotate_frame_with_map(
 
     # map_pcd.paint_uniform_color([0, 0, 0])
     # labels_unique = np.unique(map_labels)
-    # colors = np.concatenate([np.asarray([[0,0,0]]), np.random.rand(labels_unique.size, 3)])
+    # colors = np.concatenate([np.asarray([[0,0,0]]), np.random.rand(np.max(labels_unique), 3)])
     # map_colors = colors[map_labels]
     # map_pcd.colors = o3d.utility.Vector3dVector(map_colors)
     # mapped_frame_pcd.paint_uniform_color([1, 0, 0])
@@ -147,6 +154,7 @@ if __name__ == "__main__":
     path_to_calib = sys.argv[4]
     output_path = sys.argv[5]
     debug = True
+    debug_miss_clicks = False
 
     loader = KittiLoader(data_path)
     poses = load_poses(path_to_poses)
@@ -157,11 +165,12 @@ if __name__ == "__main__":
     map_kd_tree = KDTree(np.asarray(map_pcd.points))
 
     if debug:
-        control_frame_ids = np.concatenate([np.random.randint(low=0, high=250, size=3), np.asarray([31, 211])])
+        high = loader.get_frame_count()
+        control_frame_ids = np.concatenate([np.random.randint(low=0, high=high, size=9), np.asarray([31])])
 
     for frame_id in range(loader.get_frame_count()):
-        if frame_id != 31:
-            continue
+        # if frame_id != 652:
+        #     continue
         frame_pcd = loader.read_pcd(frame_id)
         transform_matrix = poses[frame_id]
         frame_labels, frame_indices_in_map = annotate_frame_with_map(frame_pcd, map_kd_tree, map_labels, transform_matrix, calib_matrix)
@@ -173,16 +182,13 @@ if __name__ == "__main__":
         if debug and frame_id in control_frame_ids:
             pcd_filename = "{:06d}.pcd".format(frame_id)
             ref_pcd_filename = "ref_{}".format(pcd_filename)
+
             _, unique_indices = np.unique(frame_indices_in_map, return_index=True)
             ref_pcd = map_pcd.select_by_index(frame_indices_in_map[unique_indices])
-            o3d.io.write_point_cloud(os.path.join(output_path, ref_pcd_filename), ref_pcd)
             ref_labels = frame_labels_ref[unique_indices]
-            SSEAnnotation.save_to_file(ref_labels, os.path.join(output_path, ref_pcd_filename))
-            SSEAnnotation.save_to_file(frame_labels, os.path.join(output_path, pcd_filename))
-            o3d.io.write_point_cloud(os.path.join(output_path, pcd_filename), frame_pcd)
+
+            visualize_pcd_labels(frame_pcd, frame_labels, os.path.join(output_path, pcd_filename))
+            visualize_pcd_labels(ref_pcd, ref_labels, os.path.join(output_path, ref_pcd_filename))
             print("Frame {} is debug choice!".format(frame_id))
 
         print("Frame {} is ready!".format(frame_id))
-
-        if frame_id == 250:
-            break

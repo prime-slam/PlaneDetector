@@ -17,9 +17,8 @@ if __name__ == "__main__":
 
     # eye
     parts = {
-        'part_-148_1_-82_67_u58.pcd': (1, 60),
-        'part_-298_-148_67_217_u59.pcd': (61, 119),
-        'part_1_151_217_367_u50.pcd': (120, 222)
+        'part_-148_1_67_217_u74.pcd': (1, 72),
+        'part_1_151_67_217_u73.pcd': (73, 178)
     }
 
     # res = {
@@ -33,9 +32,8 @@ if __name__ == "__main__":
 
     # eye
     res = {
-        'part_-148_1_-82_67_u58.pcd': [],
-        'part_-298_-148_67_217_u59.pcd': [],
-        'part_1_151_217_367_u50.pcd': []
+        'part_-148_1_67_217_u74.pcd': [],
+        'part_1_151_67_217_u73.pcd': []
     }
 
     for filename in filenames:
@@ -77,11 +75,8 @@ if __name__ == "__main__":
         "Ground",
         "Dynamic",
         "Static",
-        "Plane_0"
+        "Plane_0 (1)"
     ] + ["Plane_{}".format(i) for i in range(100)]
 
     for key, value in res.items():
         print("{0}: {1}".format(key, list(map(lambda x: label_names[x], value))))
-
-# 8, 11, 13, 18, 34, 41, 63, 71, 73, 160, 179, 190, 243, 244, 249, 324, 349, 369, 410, 430, 449, 467 -- before eye
-# 21, 117, 142, 151, 183!!!, 215 - after eye
