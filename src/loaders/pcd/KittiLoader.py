@@ -25,6 +25,5 @@ class KittiLoader(BaseLoader):
         cloud_size = pcd_points.shape[0]
 
         return SegmentedPointCloud(
-            pcd=pcd,
-            unsegmented_cloud_indices=np.arange(cloud_size)
+            pcd=pcd, unsegmented_cloud_indices=np.arange(cloud_size)
         )

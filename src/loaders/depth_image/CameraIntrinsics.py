@@ -17,5 +17,5 @@ class CameraIntrinsics:
                 fx=fx,  # X-axis focal length
                 fy=fy,  # Y-axis focal length
                 cx=cx,  # X-axis principle point
-                cy=cy  # Y-axis principle point
+                cy=cy,  # Y-axis principle point
             )

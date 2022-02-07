@@ -16,18 +16,22 @@ def get_dictionary_indices_of_current_label(indices_array: np.ndarray) -> dict:
     return dictionary
 
 
-def planes_intersection_indices(plane_left: np.ndarray, plane_right: np.ndarray) -> np.array:
+def planes_intersection_indices(
+    plane_left: np.ndarray, plane_right: np.ndarray
+) -> np.array:
     return np.intersect1d(plane_left, plane_right)
 
 
 def planes_union_indices(
-        plane_left: np.ndarray,
-        plane_right: np.ndarray,
+    plane_left: np.ndarray,
+    plane_right: np.ndarray,
 ) -> np.array:
     return np.union1d(plane_left, plane_right)
 
 
-def are_nearly_overlapped(plane_predicted: SegmentedPlane, plane_gt: SegmentedPlane, required_overlap: float):
+def are_nearly_overlapped(
+    plane_predicted: SegmentedPlane, plane_gt: SegmentedPlane, required_overlap: float
+):
     """
     Calculate if planes are overlapped enough (80%) to be used for PP-PR metric
     :param required_overlap: overlap threshold which will b checked to say that planes overlaps
@@ -40,4 +44,7 @@ def are_nearly_overlapped(plane_predicted: SegmentedPlane, plane_gt: SegmentedPl
     gt_size = plane_gt.pcd_indices.size
     predicted_size = plane_predicted.pcd_indices.size
 
-    return intersection_size / predicted_size >= required_overlap and intersection_size / gt_size >= required_overlap
+    return (
+        intersection_size / predicted_size >= required_overlap
+        and intersection_size / gt_size >= required_overlap
+    )

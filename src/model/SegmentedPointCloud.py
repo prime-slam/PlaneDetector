@@ -6,14 +6,13 @@ from src.utils.colors import UNSEGMENTED_PCD_COLOR_NORMALISED
 
 
 class SegmentedPointCloud:
-
     def __init__(
-            self,
-            pcd: o3d.geometry.PointCloud,
-            planes: [SegmentedPlane] = None,
-            zero_depth_cloud_indices: np.array = np.asarray([], dtype=np.int64),
-            unsegmented_cloud_indices: np.array = np.asarray([], dtype=np.int64),
-            structured_shape: tuple = None
+        self,
+        pcd: o3d.geometry.PointCloud,
+        planes: [SegmentedPlane] = None,
+        zero_depth_cloud_indices: np.array = np.asarray([], dtype=np.int64),
+        unsegmented_cloud_indices: np.array = np.asarray([], dtype=np.int64),
+        structured_shape: tuple = None,
     ):
         if pcd is None:
             pcd = o3d.geometry.PointCloud()
@@ -33,7 +32,7 @@ class SegmentedPointCloud:
             self.planes,
             self.unsegmented_cloud_indices,
             self.zero_depth_cloud_indices,
-            self.pcd
+            self.pcd,
         )
 
     def filter_planes(self, filter_func):

@@ -8,21 +8,18 @@ from src.model.SegmentedPointCloud import SegmentedPointCloud
 
 
 def load_annotations(
-        loader: BaseLoader,
-        input_pcd: SegmentedPointCloud,
-        depth_frame_num,
-        annotator: BaseAnnotator,
-        filter_outliers
+    loader: BaseLoader,
+    input_pcd: SegmentedPointCloud,
+    depth_frame_num,
+    annotator: BaseAnnotator,
+    filter_outliers,
 ):
     if isinstance(loader, ImageLoader):
         annotation_frame_num = loader.depth_to_rgb_index[depth_frame_num]
     else:
         annotation_frame_num = depth_frame_num
 
-    result_pcd = annotator.annotate(
-        input_pcd,
-        annotation_frame_num
-    )
+    result_pcd = annotator.annotate(input_pcd, annotation_frame_num)
     if filter_outliers:
         result_pcd = OutlierDetector.remove_planes_outliers(result_pcd)
 
@@ -30,12 +27,12 @@ def load_annotations(
 
 
 def process_frame(
-        loader: BaseLoader,
-        frame_num: int,
-        annotator: BaseAnnotator,
-        filter_annotation_outliers: bool,
-        detector: BaseDetector,
-        benchmark: BaseBenchmark
+    loader: BaseLoader,
+    frame_num: int,
+    annotator: BaseAnnotator,
+    filter_annotation_outliers: bool,
+    detector: BaseDetector,
+    benchmark: BaseBenchmark,
 ) -> (SegmentedPointCloud, SegmentedPointCloud):
     result_pcd = None
     detected_pcd = None
@@ -44,11 +41,7 @@ def process_frame(
 
     if annotator is not None:
         result_pcd = load_annotations(
-            loader,
-            input_pcd,
-            frame_num,
-            annotator,
-            filter_annotation_outliers
+            loader, input_pcd, frame_num, annotator, filter_annotation_outliers
         )
         # PointCloudPrinter(result_pcd.get_color_pcd_for_visualization()).save_to_ply("result.ply")
         # PointCloudPrinter(result_pcd.get_color_pcd_for_visualization()).save_to_pcd("result.pcd")

@@ -27,7 +27,9 @@ class TumLoader(ImageLoader):
         depth_filenames = os.listdir(depth_path)
 
         rgb_filenames = sorted(rgb_filenames, key=TumLoader.__filenames_sorted_mapper)
-        depth_filenames = sorted(depth_filenames, key=TumLoader.__filenames_sorted_mapper)
+        depth_filenames = sorted(
+            depth_filenames, key=TumLoader.__filenames_sorted_mapper
+        )
 
         return rgb_filenames, depth_filenames
 
@@ -35,7 +37,7 @@ class TumLoader(ImageLoader):
         depth_to_rgb_index = []
         rgb_index = 0
         depth_index = 0
-        prev_delta = float('inf')
+        prev_delta = float("inf")
         while depth_index < len(depth_filenames) and rgb_index < len(rgb_filenames):
             rgb_timestamp = float(rgb_filenames[rgb_index][:-4])
             depth_timestamp = float(depth_filenames[depth_index][:-4])
@@ -69,7 +71,7 @@ class TumLoader(ImageLoader):
                 fy=590.1,  # Y-axis focal length
                 cx=331.0,  # X-axis principle point
                 cy=234.0,  # Y-axis principle point
-                factor=5000  # for the 16-bit PNG files
+                factor=5000,  # for the 16-bit PNG files
             )
 
         def get_initial_pcd_transform(self):

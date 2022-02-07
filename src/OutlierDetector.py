@@ -16,12 +16,14 @@ def remove_planes_outliers(segmented_pcd: SegmentedPointCloud) -> SegmentedPoint
                     plane.pcd_indices,
                     plane.zero_depth_pcd_indices,
                     plane.track_id,
-                    plane.color
+                    plane.color,
                 )
             )
             continue
         plane_pcd = segmented_pcd.pcd.select_by_index(plane.pcd_indices)
-        inliers, outliers = O3DRansacDetector.detect_plane(plane_pcd)  # indices in the small pcd of only one plane
+        inliers, outliers = O3DRansacDetector.detect_plane(
+            plane_pcd
+        )  # indices in the small pcd of only one plane
         inlier_indices = plane.pcd_indices[inliers]
         outlier_indices = plane.pcd_indices[outliers]
         unsegmented_indices_list.append(outlier_indices)
@@ -30,7 +32,7 @@ def remove_planes_outliers(segmented_pcd: SegmentedPointCloud) -> SegmentedPoint
                 inlier_indices,
                 plane.zero_depth_pcd_indices,
                 plane.track_id,
-                plane.color
+                plane.color,
             )
         )
 
@@ -41,5 +43,5 @@ def remove_planes_outliers(segmented_pcd: SegmentedPointCloud) -> SegmentedPoint
         updated_planes,
         unsegmented_cloud_indices=updated_unsegmented_indices,
         zero_depth_cloud_indices=segmented_pcd.zero_depth_cloud_indices,
-        structured_shape=segmented_pcd.structured_shape
+        structured_shape=segmented_pcd.structured_shape,
     )

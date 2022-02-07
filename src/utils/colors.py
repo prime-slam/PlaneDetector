@@ -7,7 +7,9 @@ def color_to_string(color_arr):
 
 
 def color_from_string(color_str):
-    return np.fromiter((float(channel_str) for channel_str in color_str.split(',')), dtype=np.float64)
+    return np.fromiter(
+        (float(channel_str) for channel_str in color_str.split(",")), dtype=np.float64
+    )
 
 
 def normalize_color(color):
@@ -34,7 +36,9 @@ produced_colors_set = {color_to_string(UNSEGMENTED_PCD_COLOR)}
 def get_random_color():
     random_color = np.asarray(UNSEGMENTED_PCD_COLOR)
     while color_to_string(random_color) in produced_colors_set:
-        random_color = np.asarray([int(x) for x in np.random.choice(range(256), size=3)])
+        random_color = np.asarray(
+            [int(x) for x in np.random.choice(range(256), size=3)]
+        )
 
     produced_colors_set.add(color_to_string(random_color))
 
@@ -43,5 +47,3 @@ def get_random_color():
 
 def get_random_normalized_color():
     return normalize_color(get_random_color())
-
-

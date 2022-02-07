@@ -17,7 +17,7 @@ class TumIclLoader(TumLoader):
                 fy=-480.00,  # Y-axis focal length
                 cx=319.50,  # X-axis principle point
                 cy=239.50,  # Y-axis principle point
-                factor=5000  # for the 16-bit PNG files
+                factor=5000,  # for the 16-bit PNG files
             )
 
         def get_initial_pcd_transform(self):

@@ -22,8 +22,5 @@ class O3DLoader(BaseLoader):
         cloud_size = np.asarray(pcd.points).shape[0]
 
         return SegmentedPointCloud(
-            pcd=pcd,
-            unsegmented_cloud_indices=np.arange(cloud_size)
+            pcd=pcd, unsegmented_cloud_indices=np.arange(cloud_size)
         )
-
-

@@ -8,18 +8,26 @@ from src.model.SegmentedPointCloud import SegmentedPointCloud
 
 
 class OneValueBenchmarkResult:
-    def __init__(self, not_predicted: list, predicted_ghost: list, predicted: dict, metric_name: str):
+    def __init__(
+        self,
+        not_predicted: list,
+        predicted_ghost: list,
+        predicted: dict,
+        metric_name: str,
+    ):
         self.missed = not_predicted
         self.predicted_ghost = predicted_ghost
         self.predicted = predicted
         self.metric_name = metric_name
 
     def __str__(self):
-        return f"Results of '{self.metric_name}' metric\n" \
-               f"Predicted: {self.predicted}\n" \
-               f"Missed: {self.missed}\n" \
-               f"Predicted ghosts: {self.predicted_ghost}\n" \
-               f"Average metric: {self.average_metric}"
+        return (
+            f"Results of '{self.metric_name}' metric\n"
+            f"Predicted: {self.predicted}\n"
+            f"Missed: {self.missed}\n"
+            f"Predicted ghosts: {self.predicted_ghost}\n"
+            f"Average metric: {self.average_metric}"
+        )
 
     @property
     def average_metric(self):
@@ -27,7 +35,6 @@ class OneValueBenchmarkResult:
 
 
 class OneValueBenchmark(BaseBenchmark):
-
     @property
     def metric_name(self):
         return self._get_metric_name()
@@ -37,10 +44,23 @@ class OneValueBenchmark(BaseBenchmark):
         pass
 
     @abstractmethod
-    def _calculate_metric(self, plane_predicted: SegmentedPlane, plane_gt: SegmentedPlane) -> float:
+    def _calculate_metric(
+        self, plane_predicted: SegmentedPlane, plane_gt: SegmentedPlane
+    ) -> float:
         pass
 
-    def execute(self, cloud_predicted: SegmentedPointCloud, cloud_gt: SegmentedPointCloud):
+    @abstractmethod
+    def calculate_cumulative_metric(
+        self,
+        point_cloud: np.array,
+        point_cloud_predicted: np.array,
+        point_cloud_gt: np.array,
+    ):
+        pass
+
+    def execute(
+        self, cloud_predicted: SegmentedPointCloud, cloud_gt: SegmentedPointCloud
+    ):
         not_predicted = []
         predicted_ghost = []
         predicted = {}
@@ -64,8 +84,5 @@ class OneValueBenchmark(BaseBenchmark):
                 not_predicted.append(gt_plane)
 
         return OneValueBenchmarkResult(
-            not_predicted,
-            predicted_ghost,
-            predicted,
-            self.metric_name
+            not_predicted, predicted_ghost, predicted, self.metric_name
         )

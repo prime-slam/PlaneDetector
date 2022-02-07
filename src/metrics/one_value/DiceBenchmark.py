@@ -22,5 +22,7 @@ class DiceBenchmark(OneValueBenchmark):
     def _get_metric_name(self):
         return "Dice"
 
-    def _calculate_metric(self, plane_predicted: SegmentedPlane, plane_gt: SegmentedPlane) -> float:
+    def _calculate_metric(
+        self, plane_predicted: SegmentedPlane, plane_gt: SegmentedPlane
+    ) -> float:
         return dice(plane_predicted, plane_gt)

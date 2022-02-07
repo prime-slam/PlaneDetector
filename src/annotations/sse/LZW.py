@@ -1,4 +1,3 @@
-
 class LZW:
     @staticmethod
     def compress(uncompressed: str) -> list:

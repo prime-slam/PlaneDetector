@@ -27,18 +27,20 @@ class IclLoader(ImageLoader):
     def _provide_filenames(self, rgb_path, depth_path) -> (list, list):
         path = depth_path  # as paths are equal
         filenames = os.listdir(path)
-        rgb_filenames = (filter(lambda x: x.endswith(".png"), filenames))
-        depth_filenames = (filter(lambda x: x.endswith(".depth"), filenames))
+        rgb_filenames = filter(lambda x: x.endswith(".png"), filenames)
+        depth_filenames = filter(lambda x: x.endswith(".depth"), filenames)
 
         rgb_filenames = sorted(rgb_filenames, key=IclLoader.__filenames_sorted_mapper)
-        depth_filenames = sorted(depth_filenames, key=IclLoader.__filenames_sorted_mapper)
+        depth_filenames = sorted(
+            depth_filenames, key=IclLoader.__filenames_sorted_mapper
+        )
 
         return rgb_filenames, depth_filenames
 
     def __load_camera_params_from_file(self, frame_num) -> dict:
         result = {}
         params_path = self.depth_images[frame_num][:-5] + "txt"
-        with open(params_path, 'r') as input_file:
+        with open(params_path, "r") as input_file:
             for line in input_file:
                 field_name_start = 0
                 field_name_end = line.find(" ")
@@ -56,9 +58,15 @@ class IclLoader(ImageLoader):
     def __get_camera_params_for_frame(self, frame_num):
         # Adopted from https://www.doc.ic.ac.uk/~ahanda/VaFRIC/getcamK.m
         camera_params_raw = self.__load_camera_params_from_file(frame_num)
-        cam_dir = np.fromstring(camera_params_raw["cam_dir"][1:-1], dtype=float, sep=',').T
-        cam_right = np.fromstring(camera_params_raw["cam_right"][1:-1], dtype=float, sep=',').T
-        cam_up = np.fromstring(camera_params_raw["cam_up"][1:-1], dtype=float, sep=',').T
+        cam_dir = np.fromstring(
+            camera_params_raw["cam_dir"][1:-1], dtype=float, sep=","
+        ).T
+        cam_right = np.fromstring(
+            camera_params_raw["cam_right"][1:-1], dtype=float, sep=","
+        ).T
+        cam_up = np.fromstring(
+            camera_params_raw["cam_up"][1:-1], dtype=float, sep=","
+        ).T
         focal = np.linalg.norm(cam_dir)
         aspect = np.linalg.norm(cam_right) / np.linalg.norm(cam_up)
         angle = 2 * math.atan(np.linalg.norm(cam_right) / 2 / focal)
@@ -91,22 +99,33 @@ class IclLoader(ImageLoader):
         fx, fy, cx, cy = self.__get_camera_params_for_frame(frame_num)
 
         cam_intrinsic = self.config.get_cam_intrinsic()
-        x_matrix = np.tile(np.arange(cam_intrinsic.width), (cam_intrinsic.height, 1)).flatten()
-        y_matrix = np.transpose(np.tile(np.arange(cam_intrinsic.height), (cam_intrinsic.width, 1))).flatten()
+        x_matrix = np.tile(
+            np.arange(cam_intrinsic.width), (cam_intrinsic.height, 1)
+        ).flatten()
+        y_matrix = np.transpose(
+            np.tile(np.arange(cam_intrinsic.height), (cam_intrinsic.width, 1))
+        ).flatten()
         x_modifier = (x_matrix - cx) / fx
         y_modifier = (y_matrix - cy) / fy
 
         points = np.zeros((cam_intrinsic.width * cam_intrinsic.height, 3))
 
-        with open(depth_frame_path, 'r') as input_file:
+        with open(depth_frame_path, "r") as input_file:
             data = input_file.read()
-            depth_data = np.asarray(list(
-                map(lambda x: float(x), data.split(" ")[:cam_intrinsic.height * cam_intrinsic.width])
-            ))
+            depth_data = np.asarray(
+                list(
+                    map(
+                        lambda x: float(x),
+                        data.split(" ")[: cam_intrinsic.height * cam_intrinsic.width],
+                    )
+                )
+            )
             # depth_data = depth_data.reshape((480, 640))
 
             scale = 100  # from cm to m
-            points[:, 2] = depth_data / np.sqrt(x_modifier ** 2 + y_modifier ** 2 + 1) / scale
+            points[:, 2] = (
+                depth_data / np.sqrt(x_modifier**2 + y_modifier**2 + 1) / scale
+            )
             points[:, 0] = x_modifier * points[:, 2]
             points[:, 1] = y_modifier * points[:, 2]
 
@@ -120,7 +139,7 @@ class IclLoader(ImageLoader):
                 pcd=pcd,
                 unsegmented_cloud_indices=np.arange(points.shape[0]),
                 zero_depth_cloud_indices=zero_depth_indices,
-                structured_shape=(cam_intrinsic.height, cam_intrinsic.width)
+                structured_shape=(cam_intrinsic.height, cam_intrinsic.width),
             )
 
     class IclCameraConfig(CameraConfig):
@@ -133,7 +152,7 @@ class IclLoader(ImageLoader):
                 fy=None,  # Y-axis focal length
                 cx=None,  # X-axis principle point
                 cy=None,  # Y-axis principle point
-                factor=100  # for the 16-bit PNG files
+                factor=100,  # for the 16-bit PNG files
             )
 
         def get_initial_pcd_transform(self):

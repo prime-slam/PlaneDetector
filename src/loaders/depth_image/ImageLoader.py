@@ -20,9 +20,15 @@ class ImageLoader(BaseLoader):
 
         rgb_filenames, depth_filenames = self._provide_filenames(rgb_path, depth_path)
 
-        self.depth_images = [os.path.join(depth_path, filename) for filename in depth_filenames]
-        self.rgb_images = [os.path.join(rgb_path, filename) for filename in rgb_filenames]
-        self.depth_to_rgb_index = self._match_rgb_with_depth(rgb_filenames, depth_filenames)
+        self.depth_images = [
+            os.path.join(depth_path, filename) for filename in depth_filenames
+        ]
+        self.rgb_images = [
+            os.path.join(rgb_path, filename) for filename in rgb_filenames
+        ]
+        self.depth_to_rgb_index = self._match_rgb_with_depth(
+            rgb_filenames, depth_filenames
+        )
 
     def get_frame_count(self) -> int:
         return len(self.depth_images)
@@ -52,11 +58,13 @@ class ImageLoader(BaseLoader):
         cam_intrinsics = self.config.get_cam_intrinsic(depth_image.shape)
         initial_pcd_transform = self.config.get_initial_pcd_transform()
 
-        pcd, zero_depth_indices = depth_to_pcd_custom(depth_image, cam_intrinsics, initial_pcd_transform)
+        pcd, zero_depth_indices = depth_to_pcd_custom(
+            depth_image, cam_intrinsics, initial_pcd_transform
+        )
 
         return SegmentedPointCloud(
             pcd=pcd,
             unsegmented_cloud_indices=np.arange(depth_image.size),
             zero_depth_cloud_indices=zero_depth_indices,
-            structured_shape=(depth_image.shape[0], depth_image.shape[1])
+            structured_shape=(depth_image.shape[0], depth_image.shape[1]),
         )

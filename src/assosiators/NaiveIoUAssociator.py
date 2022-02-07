@@ -3,7 +3,9 @@ from src.model.SegmentedPointCloud import SegmentedPointCloud
 from src.metrics.one_value.IoUBenchmark import iou
 
 
-def associate_segmented_point_clouds(pcd_a: SegmentedPointCloud, pcd_b: SegmentedPointCloud) -> dict:
+def associate_segmented_point_clouds(
+    pcd_a: SegmentedPointCloud, pcd_b: SegmentedPointCloud
+) -> dict:
     """
     Associates point clouds and assign track ids from point cloud A to point cloud B
     :param pcd_a: Base cloud for association

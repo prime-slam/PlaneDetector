@@ -13,7 +13,7 @@ class CarlaLoader(BaseLoader):
         super().__init__(path)
 
     def read_pcd(self, frame_num) -> SegmentedPointCloud:
-        with open(self.path, 'r') as input_file:
+        with open(self.path, "r") as input_file:
             data = input_file.read()
             points, labels = CarlaLoader.CarlaParser.parse_cloud(data)
             pcd = o3d.geometry.PointCloud()
@@ -27,9 +27,8 @@ class CarlaLoader(BaseLoader):
                 pcd=pcd,
                 planes=planes,
                 unsegmented_cloud_indices=np.setdiff1d(
-                    np.arange(points.shape[0]),
-                    np.concatenate(all_segmented_indices)
-                )
+                    np.arange(points.shape[0]), np.concatenate(all_segmented_indices)
+                ),
             )
 
     def get_frame_count(self) -> int:
@@ -42,11 +41,13 @@ class CarlaLoader(BaseLoader):
             if plane_id not in CarlaLoader.PLANAR_IDS:
                 continue
             plane_indices = np.where(loaded_labels == plane_id)[0]
-            planes.append(SegmentedPlane(
-                pcd_indices=plane_indices,
-                zero_depth_pcd_indices=np.asarray([], dtype=int),
-                track_id=SegmentedPlane.NO_TRACK
-            ))
+            planes.append(
+                SegmentedPlane(
+                    pcd_indices=plane_indices,
+                    zero_depth_pcd_indices=np.asarray([], dtype=int),
+                    track_id=SegmentedPlane.NO_TRACK,
+                )
+            )
 
         return planes
 
@@ -55,7 +56,9 @@ class CarlaLoader(BaseLoader):
         def parse_cloud(cloud_string) -> (np.array, np.array):
             transform_separator_position = cloud_string.find("[") - 1
             end_data_position = cloud_string.rfind("]")
-            data_string = cloud_string[transform_separator_position + 2:end_data_position]  # skip global []
+            data_string = cloud_string[
+                transform_separator_position + 2 : end_data_position
+            ]  # skip global []
             coords = []
             labels = []
             while len(data_string) > 0:
@@ -64,14 +67,17 @@ class CarlaLoader(BaseLoader):
                 #     break
                 start_of_point_coord = start_of_point_data + 1
                 end_of_point_coord = data_string.find("]")
-                end_of_point_data = data_string[end_of_point_coord + 1:].find("]") + (end_of_point_coord + 1)
-                coord_string = data_string[start_of_point_coord + 1:end_of_point_coord]
-                label_string = data_string[end_of_point_coord + 2:end_of_point_data]
+                end_of_point_data = data_string[end_of_point_coord + 1 :].find("]") + (
+                    end_of_point_coord + 1
+                )
+                coord_string = data_string[
+                    start_of_point_coord + 1 : end_of_point_coord
+                ]
+                label_string = data_string[end_of_point_coord + 2 : end_of_point_data]
 
-                coords.append(np.fromstring(coord_string, dtype=float, sep=','))
+                coords.append(np.fromstring(coord_string, dtype=float, sep=","))
                 labels.append(int(label_string))
 
-                data_string = data_string[end_of_point_data + 1:]
+                data_string = data_string[end_of_point_data + 1 :]
 
             return np.asarray(coords), np.asarray(labels)
-

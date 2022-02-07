@@ -19,7 +19,9 @@ class CVATAnnotator(BaseAnnotator):
         super().__init__(path, start_frame_num)
         self.annotation = CVATAnnotation(path, start_frame_num)
 
-    def annotate(self, segmented_pcd: SegmentedPointCloud, frame_num: int) -> SegmentedPointCloud:
+    def annotate(
+        self, segmented_pcd: SegmentedPointCloud, frame_num: int
+    ) -> SegmentedPointCloud:
         if segmented_pcd.structured_shape is None:
             raise Exception("CVAT annotation works only for structured pcd")
 
@@ -30,7 +32,7 @@ class CVATAnnotator(BaseAnnotator):
 
         colored_pcd = load_rgb_colors_to_pcd(annotated_rgb, segmented_pcd.pcd)
 
-        black_color = np.array([0., 0., 0.])
+        black_color = np.array([0.0, 0.0, 0.0])
         black_color_str = color_to_string(black_color)
         planes_indices = self.__group_pcd_indexes_by_color(colored_pcd)
 
@@ -49,20 +51,16 @@ class CVATAnnotator(BaseAnnotator):
                     next_track_id += 1
 
                 not_zero_indices = np.setdiff1d(
-                    indices,
-                    segmented_pcd.zero_depth_cloud_indices
+                    indices, segmented_pcd.zero_depth_cloud_indices
                 )
-                zero_indices = np.setdiff1d(
-                    indices,
-                    not_zero_indices
-                )
+                zero_indices = np.setdiff1d(indices, not_zero_indices)
 
                 planes.append(
                     SegmentedPlane(
                         not_zero_indices,
                         zero_indices,
                         track_id,
-                        denormalize_color(color_from_string(color_str))
+                        denormalize_color(color_from_string(color_str)),
                     )
                 )
 
@@ -71,7 +69,7 @@ class CVATAnnotator(BaseAnnotator):
             planes,
             unsegmented_cloud_indices=unsegmented_cloud_indices,
             zero_depth_cloud_indices=segmented_pcd.zero_depth_cloud_indices,
-            structured_shape=segmented_pcd.structured_shape
+            structured_shape=segmented_pcd.structured_shape,
         )
 
     def __group_pcd_indexes_by_color(self, pcd):
@@ -80,6 +78,8 @@ class CVATAnnotator(BaseAnnotator):
         unique_colors = np.unique(colors, axis=0)
         for color in unique_colors:
             # remember that np.where returns tuple --- we have to extract array from it
-            result[color_to_string(color)] = np.where(np.all(colors == color, axis=1))[0]
+            result[color_to_string(color)] = np.where(np.all(colors == color, axis=1))[
+                0
+            ]
 
         return result

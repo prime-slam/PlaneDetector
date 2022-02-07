@@ -4,7 +4,10 @@ import cv2
 import numpy as np
 
 from src.loaders.depth_image.TumIclLoader import TumIclLoader
-from src.utils.point_cloud import rgb_and_depth_to_pcd_custom, pcd_to_rgb_and_depth_custom
+from src.utils.point_cloud import (
+    rgb_and_depth_to_pcd_custom,
+    pcd_to_rgb_and_depth_custom,
+)
 
 
 def test_rgbd_pcd_rgbd_convertion():
@@ -16,11 +19,11 @@ def test_rgbd_pcd_rgbd_convertion():
     camera_intrinsics = camera_config.get_cam_intrinsic(depth_image.shape)
     initial_pcd_transform = camera_config.get_initial_pcd_transform()
 
-    pcd, zero_depth_indices = rgb_and_depth_to_pcd_custom(rgb_image, depth_image, camera_intrinsics, initial_pcd_transform)
+    pcd, zero_depth_indices = rgb_and_depth_to_pcd_custom(
+        rgb_image, depth_image, camera_intrinsics, initial_pcd_transform
+    )
     rgb_image_restored, depth_image_restored = pcd_to_rgb_and_depth_custom(
-        pcd,
-        camera_intrinsics,
-        initial_pcd_transform
+        pcd, camera_intrinsics, initial_pcd_transform
     )
 
     cv2.imwrite("rgbRes.png", rgb_image_restored)

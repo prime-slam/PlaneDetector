@@ -17,7 +17,7 @@ def pick_and_print_point(pcd: o3d.geometry.PointCloud):
     print(pts[picked[0]])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = create_input_parser()
     args = parser.parse_args()
     path_to_dataset = args.dataset_path
@@ -28,7 +28,9 @@ if __name__ == '__main__':
 
     hasAnnotations = args.annotations_path is not None and args.annotator is not None
     if hasAnnotations:
-        annotator = annotators[args.annotator](args.annotations_path, args.annotations_start_frame)
+        annotator = annotators[args.annotator](
+            args.annotations_path, args.annotations_start_frame
+        )
     else:
         annotator = None
 
@@ -52,7 +54,7 @@ if __name__ == '__main__':
             annotator,
             args.filter_annotation_outliers,
             detector,
-            benchmark
+            benchmark,
         )
         if result_pcd is not None:
             result_for_visualization = result_pcd.get_color_pcd_for_visualization()
