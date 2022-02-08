@@ -10,10 +10,6 @@ from src.utils.colors import color_to_string, color_from_string, denormalize_col
 from src.utils.point_cloud import load_rgb_colors_to_pcd
 
 
-next_track_id = 0
-color_to_track = {}
-
-
 class CVATAnnotator(BaseAnnotator):
     def __init__(self, path, start_frame_num: int):
         super().__init__(path, start_frame_num)
@@ -35,18 +31,13 @@ class CVATAnnotator(BaseAnnotator):
         planes_indices = self.__group_pcd_indexes_by_color(colored_pcd)
 
         planes = []
-        global next_track_id
         unsegmented_cloud_indices = None
         for color_str, indices in planes_indices.items():
             if color_str == black_color_str:
                 unsegmented_cloud_indices = indices
             else:
-                if color_str in color_to_track:
-                    track_id = color_to_track[color_str]
-                else:
-                    track_id = next_track_id
-                    color_to_track[color_str] = track_id
-                    next_track_id += 1
+                denorm_color_str = color_to_string(denormalize_color(color_from_string(color_str)).astype(dtype=int))
+                track_id = self.annotation.color_to_track[denorm_color_str]
 
                 not_zero_indices = np.setdiff1d(
                     indices,

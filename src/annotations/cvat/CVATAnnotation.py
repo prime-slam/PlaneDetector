@@ -1,6 +1,6 @@
 from lxml import objectify
 
-from src.utils.colors import get_random_color
+from src.utils.colors import get_random_color, color_to_string
 
 
 def parse_points(points_str) -> list:
@@ -32,6 +32,7 @@ class CVATAnnotation:
         tracks = [child for child in root.iterchildren()][2:]
 
         self.tracks = []
+        self.color_to_track = {}
         self.start_frame_num = start_frame_num
         self.min_frame_id = None
         self.max_frame_id = None
@@ -39,6 +40,7 @@ class CVATAnnotation:
         for track in tracks:
             frames = track.getchildren()
             planes_track = self.Track()
+            self.color_to_track[color_to_string(planes_track.color)] = int(track.attrib['id'])
             for frame in frames:
                 if frame.tag == "polygon":
                     points = parse_points(frame.attrib['points'])

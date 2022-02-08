@@ -11,15 +11,76 @@ from src.loaders.depth_image.CameraIntrinsics import CameraIntrinsics
 from src.model.SegmentedPlane import SegmentedPlane
 from src.model.SegmentedPointCloud import SegmentedPointCloud
 from src.assosiators.NaiveIoUAssociator import associate_segmented_point_clouds
-from src.output.PointCloudPrinter import PointCloudPrinter
 from src.parser import loaders
 from src.utils.point_cloud import pcd_to_rgb_and_depth_custom
 
 
-def update_track_indices(pcd: SegmentedPointCloud, matches: dict):
+last_used_track_id = -1
+
+last_associate_matches: dict = None
+
+
+def print_segment_tracks(original_track_to_unified: dict, prev_segment: int):
+    print("{")
+    for original_track in original_track_to_unified.keys():
+        match_str = "   {}:".format(original_track + 1)
+        if last_associate_matches is not None and original_track in last_associate_matches:
+            match_str += " ({0}, {1})".format(prev_segment + 1, last_associate_matches[original_track] + 1)
+        match_str += ","
+        print(match_str)
+    print("},")
+
+
+def update_track_indices(pcd: SegmentedPointCloud, matches: dict, resolve_history_for_part: dict, is_first_part: bool):
+    global last_used_track_id
     for plane in pcd.planes:
-        if plane.track_id in matches:
-            plane.track_id = matches[plane.track_id]
+        if plane.track_id not in matches:
+            if is_first_part:
+                matches[plane.track_id] = plane.track_id
+                resolve_history_for_part[plane.track_id] = plane.track_id
+                last_used_track_id = max(last_used_track_id, plane.track_id)
+            else:
+                matches[plane.track_id] = last_used_track_id + 1
+                resolve_history_for_part[plane.track_id] = last_used_track_id + 1
+                last_used_track_id += 1
+
+        plane.track_id = matches[plane.track_id]
+
+
+def resolve_tracks(predefined_track_indices_matches: list, current_annot_segment: int, resolve_history: [dict]) -> dict:
+    new_track_matches = {}
+    for original_track, match_pair in predefined_track_indices_matches[current_annot_segment - 1].items():
+        reference_annot_segment, reference_track = match_pair
+
+        # Fix enumeration from 1 which was used for labeler and cvat ui
+        reference_annot_segment -= 1
+        reference_track -= 1
+        original_track -= 1
+
+        unified_track = resolve_history[reference_annot_segment][reference_track]
+        new_track_matches[original_track] = unified_track
+        resolve_history[current_annot_segment][original_track] = unified_track
+
+    return new_track_matches
+
+
+def build_track_matches(previous_pcd, result_pcd: SegmentedPointCloud):
+    global last_used_track_id
+    global last_associate_matches
+    new_track_matches = {}
+    for plane in result_pcd.planes:
+        new_track_matches[plane.track_id] = last_used_track_id + 1
+        plane.track_id = last_used_track_id + 1
+        last_used_track_id += 1
+
+    associate_matches = associate_segmented_point_clouds(previous_pcd, result_pcd)
+    last_associate_matches = {}
+    for original_track, unified_track in new_track_matches.items():
+        if unified_track in associate_matches:
+            new_track_matches[original_track] = associate_matches[unified_track]
+            last_associate_matches[original_track] = associate_matches[unified_track]
+
+    return new_track_matches
 
 
 def update_planes_colors(result_pcd: SegmentedPointCloud, track_to_color: dict) -> dict:
@@ -94,7 +155,24 @@ if __name__ == "__main__":
 
         annotations_ranges.append((annotator.annotation.get_min_frame_id(), annotator.annotation.get_max_frame_id()))
 
-    track_indices_matches = None
+    resolve_history = [{} for _ in annotations_ranges]
+    original_track_to_unified = {}
+    annotation_index = None
+    # predefined_track_indices_matches = [
+    #     {
+    #         35: (1, 34),
+    #         2: (1, 31),
+    #         1: (1, 1),
+    #         33: (1, 9)
+    #     },  # for the 2-1 match
+    #     {
+    #         1: (2, 33),
+    #         2: (2, 29),
+    #         3: (1, 34)
+    #     }   # for the 3-2 match --- track in 3d peace : (matched piece, track in matched piece)
+    #     # if the track is new in this part, than just remove it from list
+    # ]
+    predefined_track_indices_matches = None
     previous_pcd = None
 
     track_to_color = {}
@@ -120,11 +198,34 @@ if __name__ == "__main__":
             benchmark=None
         )
 
+        is_first_part = annotation_index == 0
+
         # First frame of not first annotation have to be associated with previous pcd
         if annotation_frame_num == annotations_ranges[annotation_index][0] and previous_pcd is not None:
-            track_indices_matches = associate_segmented_point_clouds(previous_pcd, result_pcd)
-        elif track_indices_matches is not None:
-            update_track_indices(result_pcd, track_indices_matches)
+            if predefined_track_indices_matches is None:
+                prev_annot_index = annotation_index - 1
+                if prev_annot_index != 0:
+                    print_segment_tracks(original_track_to_unified, prev_annot_index)
+                original_track_to_unified = build_track_matches(previous_pcd, result_pcd)
+            else:
+                original_track_to_unified = resolve_tracks(
+                    predefined_track_indices_matches,
+                    annotation_index,
+                    resolve_history
+                )
+                update_track_indices(
+                    result_pcd,
+                    original_track_to_unified,
+                    resolve_history[annotation_index],
+                    is_first_part=False
+                )
+        else:
+            update_track_indices(
+                result_pcd,
+                original_track_to_unified,
+                resolve_history[annotation_index],
+                is_first_part=is_first_part
+            )
 
         track_to_color = update_planes_colors(result_pcd, track_to_color)
 
@@ -157,4 +258,7 @@ if __name__ == "__main__":
 
         result_pcd.filter_planes(filter_tum_planes)
         save_frame(result_pcd, output_filename, output_path, cam_intrinsic, initial_pcd_transform)
-        # break
+        # if frame_num == 301:
+        #     break
+
+    print_segment_tracks(original_track_to_unified, annotation_index)
