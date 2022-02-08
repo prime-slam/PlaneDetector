@@ -43,6 +43,12 @@ class SegmentedPointCloud:
                 filtered_planes.append(plane)
         self.planes = filtered_planes
 
+    def get_raw_pcd(self):
+        result_pcd = o3d.geometry.PointCloud()
+        result_pcd.points = self.pcd.points
+
+        return result_pcd
+
     def get_color_pcd_for_visualization(self):
         colors = np.asarray(self.pcd.colors)
         colors[self.unsegmented_cloud_indices] = UNSEGMENTED_PCD_COLOR_NORMALISED

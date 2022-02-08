@@ -3,6 +3,8 @@ import open3d as o3d
 
 from src.FrameProcessor import process_frame
 from src.metrics.CompositeBenchmark import CompositeBenchmark
+from src.output.LabelPrinter import LabelPrinter
+from src.output.PointCloudPrinter import PointCloudPrinter
 from src.parser import create_input_parser, loaders, annotators, algos, metrics
 
 
@@ -55,9 +57,12 @@ if __name__ == '__main__':
             benchmark
         )
         if result_pcd is not None:
+            # PointCloudPrinter(result_pcd.get_raw_pcd()).save_to_pcd("{}.pcd".format(frame_num))
+            # LabelPrinter.build_from_segmented_pcd(result_pcd).save_to_int_arr("gt_{}.npy".format(frame_num))
             result_for_visualization = result_pcd.get_color_pcd_for_visualization()
             o3d.visualization.draw_geometries([result_for_visualization])
         if detected_pcd is not None:
+            # LabelPrinter.build_from_segmented_pcd(detected_pcd).save_to_int_arr("pred_{}.npy".format(frame_num))
             result_for_visualization = detected_pcd.get_color_pcd_for_visualization()
             o3d.visualization.draw_geometries([result_for_visualization])
 
