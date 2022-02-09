@@ -246,19 +246,19 @@ if __name__ == "__main__":
             distances_from_cam = np.sqrt(np.sum(plane_points ** 2, axis=-1))
             mean_distance = np.mean(distances_from_cam)
             # 5 for TUM pioneer, 4 for TUM desk, long office
-            is_zero_dominate = plane.zero_depth_pcd_indices.size / 5 > plane.pcd_indices.size
+            is_zero_dominate = plane.zero_depth_pcd_indices.size / 4 > plane.pcd_indices.size
             # print("Distance: {0}. Size of zero: {1}. Size of plane: {2}".format(
             #     mean_distance,
             #     plane.zero_depth_pcd_indices.size,
             #     plane.pcd_indices.size
             # ))
 
-            # 3 for TUM pioneer, 3.5 for TUM desk,
-            return mean_distance < 3 and not is_zero_dominate
+            # 3 for TUM pioneer, 3.5 for TUM desk,long_office
+            return mean_distance < 3.5 and not is_zero_dominate
 
         result_pcd.filter_planes(filter_tum_planes)
         save_frame(result_pcd, output_filename, output_path, cam_intrinsic, initial_pcd_transform)
-        # if frame_num == 301:
+        # if frame_num == 3:
         #     break
 
     print_segment_tracks(original_track_to_unified, annotation_index)
