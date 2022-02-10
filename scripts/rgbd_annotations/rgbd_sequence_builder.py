@@ -77,6 +77,8 @@ def build_track_matches(previous_pcd, result_pcd: SegmentedPointCloud):
     last_associate_matches = {}
     for original_track, unified_track in new_track_matches.items():
         if unified_track in associate_matches:
+            if associate_matches[unified_track] == SegmentedPlane.NO_TRACK:
+                continue
             new_track_matches[original_track] = associate_matches[unified_track]
             last_associate_matches[original_track] = associate_matches[unified_track]
 
@@ -258,7 +260,7 @@ if __name__ == "__main__":
 
         result_pcd.filter_planes(filter_tum_planes)
         save_frame(result_pcd, output_filename, output_path, cam_intrinsic, initial_pcd_transform)
-        # if frame_num == 3:
+        # if frame_num == 2281:
         #     break
 
-    print_segment_tracks(original_track_to_unified, annotation_index)
+    print_segment_tracks(original_track_to_unified, annotation_index - 1)
