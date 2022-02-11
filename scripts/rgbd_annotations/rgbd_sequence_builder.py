@@ -26,6 +26,8 @@ def print_segment_tracks(original_track_to_unified: dict, prev_segment: int):
         match_str = "   {}:".format(original_track + 1)
         if last_associate_matches is not None and original_track in last_associate_matches:
             match_str += " ({0}, {1})".format(prev_segment + 1, last_associate_matches[original_track] + 1)
+        else:
+            match_str += " ({0}, {1})".format(-1, original_track_to_unified[original_track] + 1)
         match_str += ","
         print(match_str)
     print("},")
@@ -160,6 +162,36 @@ if __name__ == "__main__":
     resolve_history = [{} for _ in annotations_ranges]
     original_track_to_unified = {}
     annotation_index = None
+
+    # predefined_track_indices_matches = [  # for TUM long_office_val
+    #     {
+    #         1: (1, 34),
+    #         2: (1, 36),
+    #         5: (1, 35),
+    #         6: (1, 31),
+    #         7: (1, 32),
+    #         9: (1, 1),
+    #         11: (1, 6),
+    #         12: (1, 7),
+    #         13: (1, 2),
+    #     },
+    # ]
+    # predefined_track_indices_matches = [   # for TUM pioneer
+    #     {
+    #         11: (1, 35),
+    #         1: (1, 5),
+    #         2: (1, 1),
+    #         3: (1, 25),
+    #         4: (1, 26),
+    #         13: (1, 39),
+    #         14: (1, 29),
+    #         12: (1, 6),
+    #         5: (1, 17),
+    #         7: (1, 34),
+    #         8: (1, 27),
+    #         9: (1, 24)
+    #     },
+    # ]
     # predefined_track_indices_matches = [
     #     {
     #         35: (1, 34),
@@ -179,6 +211,27 @@ if __name__ == "__main__":
 
     track_to_color = {}
 
+    # tmp_list = [
+    #     "1305031458.245729",
+    #     "1305031458.277447",
+    #     "1305031458.343898",
+    #     "1305031458.376213",
+    #     "1305031458.443957",
+    #     "1305031458.476034",
+    #     "1305031458.643659",
+    #     "1305031458.676991",
+    #     "1305031458.943997",
+    #     "1305031459.576817",
+    #     "1305031464.183566",
+    #     "1305031464.347553",
+    #     "1305031464.684318",
+    #     "1305031465.251788",
+    #     "1305031465.351729",
+    #     "1305031465.383701",
+    #     "1305031465.416543",
+    #     "1305031465.615685",
+    # ]
+
     for frame_num in range(start_depth_frame_num, loader.get_frame_count()):
         annotation_frame_num = loader.depth_to_rgb_index[frame_num]
         annotation_index = None
@@ -190,6 +243,12 @@ if __name__ == "__main__":
 
         if annotation_index is None:
             continue
+
+        # frame_timestamp = os.path.split(loader.depth_images[frame_num])[-1][:-4]
+        # if frame_timestamp not in tmp_list:
+        #     continue
+        # else:
+        #     print("{0} -> {1}".format(frame_timestamp, annotation_frame_num))
 
         result_pcd, _ = process_frame(
             loader,
@@ -248,7 +307,7 @@ if __name__ == "__main__":
             distances_from_cam = np.sqrt(np.sum(plane_points ** 2, axis=-1))
             mean_distance = np.mean(distances_from_cam)
             # 5 for TUM pioneer, 4 for TUM desk, long office
-            is_zero_dominate = plane.zero_depth_pcd_indices.size / 4 > plane.pcd_indices.size
+            is_zero_dominate = plane.zero_depth_pcd_indices.size / 5 > plane.pcd_indices.size
             # print("Distance: {0}. Size of zero: {1}. Size of plane: {2}".format(
             #     mean_distance,
             #     plane.zero_depth_pcd_indices.size,
@@ -256,11 +315,11 @@ if __name__ == "__main__":
             # ))
 
             # 3 for TUM pioneer, 3.5 for TUM desk,long_office
-            return mean_distance < 3.5 and not is_zero_dominate
+            return mean_distance < 3 and not is_zero_dominate
 
         result_pcd.filter_planes(filter_tum_planes)
         save_frame(result_pcd, output_filename, output_path, cam_intrinsic, initial_pcd_transform)
-        # if frame_num == 2281:
+        # if frame_num == 2284:
         #     break
 
     print_segment_tracks(original_track_to_unified, annotation_index - 1)
