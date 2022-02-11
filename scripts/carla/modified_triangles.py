@@ -4,11 +4,12 @@ import open3d as o3d
 from sklearn.cluster import DBSCAN
 from collections import defaultdict
 import argparse
+import matplotlib.pyplot as plt
+from copy import deepcopy
 
 from src.utils.colors import get_random_normalized_color
 
-
-def filter_small_triangles(mesh: o3d.geometry.TriangleMesh, min_area: float):
+def filter_small_triangles(mesh: o3d.geometry.TriangleMesh, min_area: float, min_ratio: float):
     #  filter small triangles
     triangles = np.asarray(mesh.triangles)
     vertices = np.asarray(mesh.vertices)
@@ -20,13 +21,13 @@ def filter_small_triangles(mesh: o3d.geometry.TriangleMesh, min_area: float):
         # These two vectors are in the plane
         v1 = p3 - p1
         v2 = p2 - p1
-
+        v3 = p2 - p3
+        lens = np.array([np.linalg.norm(v1), np.linalg.norm(v2), np.linalg.norm(v3)])
         # the cross product is a vector normal to the plane
         cp = np.cross(v1, v2)
-        if np.linalg.norm(cp) / 2 > min_area:
-            areas[triangle_index] = np.linalg.norm(cp) / 2
+        areas[triangle_index] = np.linalg.norm(cp) / 2
+        if not(np.linalg.norm(cp) / 2 > min_area and np.min(lens) / np.max(lens) > min_ratio):
             # This evaluates a * x3 + b * y3 + c * z3 which equals d
-        else:
             mask[triangle_index] = True
     mesh.remove_triangles_by_mask(mask)
     # o3d.visualization.draw_geometries([mesh], mesh_show_wireframe=True, mesh_show_back_face=True)
@@ -34,10 +35,11 @@ def filter_small_triangles(mesh: o3d.geometry.TriangleMesh, min_area: float):
     return mesh
 
 
-def process_mesh(mesh_file_path: str, output_path: str, min_area: float):
+def process_mesh(mesh_file_path: str, output_path: str, min_area: float, min_ratio: float):
     plane_mesh = o3d.io.read_triangle_mesh(mesh_file_path)
+    o3d.visualization.draw_geometries([plane_mesh], mesh_show_wireframe=True, mesh_show_back_face=True)
 
-    plane_mesh = filter_small_triangles(plane_mesh, min_area)
+    # plane_mesh = filter_small_triangles(plane_mesh, min_area, min_ratio)
 
     #  calculate planes
     plane_mesh.compute_triangle_normals(normalized=True)
@@ -59,6 +61,7 @@ def process_mesh(mesh_file_path: str, output_path: str, min_area: float):
     for plane_id in unique_labels:
         label_to_meshes[plane_id] = np.where(clustering.labels_ == plane_id)[0]
     
+
     #  construct meshes out of planes
     planes_meshes = []
     for label_triangles in label_to_meshes.values():
@@ -81,6 +84,9 @@ def process_mesh(mesh_file_path: str, output_path: str, min_area: float):
         # new_mesh.triangles = o3d.utility.Vector3iVector(triangles_3)
         # new_mesh.vertices = o3d.utility.Vector3dVector(vertices_3)
         if new_mesh.get_surface_area() == 0:
+            continue
+        filtered_mesh = filter_small_triangles(deepcopy(new_mesh), min_area, min_ratio)
+        if len(np.asarray(filtered_mesh.triangles)) < 2:
             continue
         planes_meshes.append(new_mesh)
     
@@ -123,9 +129,15 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         '--min_area',
-        type=int,
+        type=float,
         default=0,
         help='the minimal area of triangles that will not be filtered'
+    )
+    argparser.add_argument(
+        '--min_ratio',
+        type=float,
+        default=0,
+        help='the minimal ratio of triangle sides that will not be filtered'
     )
     argparser.add_argument(
         'mesh',
@@ -140,5 +152,5 @@ if __name__ == "__main__":
     mesh_filenames = os.listdir(args.mesh)
     for index, mesh_filename in enumerate(mesh_filenames):
         mesh_path = os.path.join(args.mesh, mesh_filename)
-        process_mesh(mesh_path, args.output_path, args.min_area)
+        process_mesh(mesh_path, args.output_path, args.min_area, args.min_ratio)
         print("{0} is ready! ({1}/{2})".format(mesh_filename[:-4], index + 1, len(mesh_filenames)))
