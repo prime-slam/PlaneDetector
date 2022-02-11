@@ -2,6 +2,7 @@ import os
 import sys
 
 import cv2
+import docker
 import numpy as np
 import open3d as o3d
 
@@ -63,6 +64,8 @@ def read_labels(annot_frame_path: str) -> np.array:
 
 
 def predict_labels(pcd_points: np.array, algo_name: str) -> np.array:
+    client = docker.from_env()
+    client.containers.run("ubuntu:latest", "echo hello world", volumes=['/home/user1/:/mnt/vol2', '/var/www:/mnt/vol1'])
     return np.zeros(pcd_points.shape[0], dtype=int)
 
 
