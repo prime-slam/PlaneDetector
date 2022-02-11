@@ -26,7 +26,7 @@ def print_segment_tracks(original_track_to_unified: dict, prev_segment: int):
         match_str = "   {}:".format(original_track + 1)
         if last_associate_matches is not None and original_track in last_associate_matches:
             match_str += " ({0}, {1})".format(prev_segment + 1, last_associate_matches[original_track] + 1)
-        else:
+        elif predefined_track_indices_matches is not None:
             match_str += " ({0}, {1})".format(-1, original_track_to_unified[original_track] + 1)
         match_str += ","
         print(match_str)
@@ -179,6 +179,7 @@ if __name__ == "__main__":
     # predefined_track_indices_matches = [   # for TUM pioneer
     #     {
     #         11: (1, 35),
+    #         10: (1, 2),
     #         1: (1, 5),
     #         2: (1, 1),
     #         3: (1, 25),
@@ -264,7 +265,8 @@ if __name__ == "__main__":
         # First frame of not first annotation have to be associated with previous pcd
         if annotation_frame_num == annotations_ranges[annotation_index][0] and previous_pcd is not None:
             if predefined_track_indices_matches is None:
-                prev_annot_index = annotation_index - 1
+                # as we are on the next annot now, but perform saving for the prev one and get prev for prev
+                prev_annot_index = annotation_index - 2
                 if prev_annot_index != 0:
                     print_segment_tracks(original_track_to_unified, prev_annot_index)
                 original_track_to_unified = build_track_matches(previous_pcd, result_pcd)
