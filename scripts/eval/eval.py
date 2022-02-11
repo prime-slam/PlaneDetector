@@ -64,9 +64,41 @@ def read_labels(annot_frame_path: str) -> np.array:
 
 
 def predict_labels(pcd_points: np.array, algo_name: str) -> np.array:
+    if not os.path.exists("input"):
+        os.mkdir("input")
+    if not os.path.exists("output"):
+        os.mkdir("output")
+
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(pcd_points)
+    o3d.io.write_point_cloud(os.path.join("input", "data.pcd"), pcd)
+    current_dir_abs = os.path.abspath(os.path.curdir)
+    path_to_input = os.path.join(current_dir_abs, "input")
+    path_to_output = os.path.join(current_dir_abs, "output")
+
     client = docker.from_env()
-    client.containers.run("ubuntu:latest", "echo hello world", volumes=['/home/user1/:/mnt/vol2', '/var/www:/mnt/vol1'])
-    return np.zeros(pcd_points.shape[0], dtype=int)
+    container = client.containers.run(
+        "cpf_segmentation:1.0",
+        "data.pcd",
+        volumes=[
+            '{}:/app/build/input'.format(path_to_input),
+            '{}:/app/build/output'.format(path_to_output)
+        ],
+        detach=True
+    )
+    for line in container.logs(stream=True):
+        print(line.strip())
+
+    result_file_path = os.path.join("output", "data_seg.pcd")
+    with open(result_file_path) as result_file:
+        lines = result_file.readlines()
+        labels = np.asarray(list(map(lambda x: int(x.split(" ")[3]), lines[11:])))
+    # segmented_pcd = o3d.io.read_point_cloud()
+    # label_colors = np.asarray(segmented_pcd.colors)
+    # labels = np.zeros(label_colors.shape[0], dtype=int)
+
+    # return np.zeros(pcd_points.shape[0], dtype=int)
+    return labels
 
 
 def get_path_to_frames(depth_path: str, annot_path: str) -> [(str, str)]:
@@ -119,6 +151,7 @@ if __name__ == "__main__":
         for algo_name in algo_names:
             print("Results for algo: '{}'".format(algo_name))
             pred_labels = predict_labels(pcd_points, algo_name)
+            visualize_pcd_labels(pcd_points, pred_labels)
 
             # print(multi_value(pcd_points, pred_labels, gt_labels))
 
