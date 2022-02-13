@@ -22,11 +22,11 @@ def filter_small_triangles(mesh: o3d.geometry.TriangleMesh, min_area: float, min
         v1 = p3 - p1
         v2 = p2 - p1
         v3 = p2 - p3
-        lens = np.array([np.linalg.norm(v1), np.linalg.norm(v2), np.linalg.norm(v3)])
+        lens = np.sort(np.array([np.linalg.norm(v1), np.linalg.norm(v2), np.linalg.norm(v3)]))
         # the cross product is a vector normal to the plane
         cp = np.cross(v1, v2)
         areas[triangle_index] = np.linalg.norm(cp) / 2
-        if not(np.linalg.norm(cp) / 2 > min_area and np.min(lens) / np.max(lens) > min_ratio):
+        if not(np.linalg.norm(cp) / 2 > min_area and lens[1] / lens[0]> min_ratio):
             # This evaluates a * x3 + b * y3 + c * z3 which equals d
             mask[triangle_index] = True
     mesh.remove_triangles_by_mask(mask)
@@ -86,6 +86,7 @@ def process_mesh(mesh_file_path: str, output_path: str, min_area: float, min_rat
         if new_mesh.get_surface_area() == 0:
             continue
         filtered_mesh = filter_small_triangles(deepcopy(new_mesh), min_area, min_ratio)
+        #experiments show that "good" planes consist of minimum 2 triangles 
         if len(np.asarray(filtered_mesh.triangles)) < 2:
             continue
         planes_meshes.append(new_mesh)
