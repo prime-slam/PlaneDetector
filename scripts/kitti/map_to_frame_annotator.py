@@ -162,14 +162,18 @@ if __name__ == "__main__":
 
     map_pcd, map_labels = build_map(map_parts_path)
     map_labels = dbscan_labels(map_pcd, map_labels)
+
+    if debug_miss_clicks:
+        sys.exit()
+
     map_kd_tree = KDTree(np.asarray(map_pcd.points))
 
     if debug:
         high = loader.get_frame_count()
-        control_frame_ids = np.concatenate([np.random.randint(low=0, high=high, size=9), np.asarray([31])])
+        control_frame_ids = np.concatenate([np.random.randint(low=0, high=high, size=99), np.asarray([31])])
 
     for frame_id in range(loader.get_frame_count()):
-        # if frame_id != 652:
+        # if frame_id not in control_frame_ids:
         #     continue
         frame_pcd = loader.read_pcd(frame_id)
         transform_matrix = poses[frame_id]
@@ -188,7 +192,7 @@ if __name__ == "__main__":
             ref_labels = frame_labels_ref[unique_indices]
 
             visualize_pcd_labels(frame_pcd, frame_labels, os.path.join(output_path, pcd_filename))
-            visualize_pcd_labels(ref_pcd, ref_labels, os.path.join(output_path, ref_pcd_filename))
+            # visualize_pcd_labels(ref_pcd, ref_labels, os.path.join(output_path, ref_pcd_filename))
             print("Frame {} is debug choice!".format(frame_id))
 
         print("Frame {} is ready!".format(frame_id))
