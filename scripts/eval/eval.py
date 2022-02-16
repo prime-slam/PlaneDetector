@@ -38,6 +38,10 @@ CLOUDS_DIR = "input"
 PREDICTIONS_DIR = "output"
 
 
+def sort_by(x):
+    return int(x)
+
+
 def read_pcd_from_depth(depth_frame_path: str, camera_intrinsics: CameraIntrinsics) -> np.array:
     depth_image = cv2.imread(depth_frame_path, cv2.IMREAD_ANYDEPTH)
     image_height, image_width = depth_image.shape[:2]
@@ -110,11 +114,14 @@ def get_filepaths_for_dir(dir_path: str):
 
 
 def get_path_to_frames(annot_path: str) -> [(str, str)]:
-    cloud_file_paths = get_filepaths_for_dir(CLOUDS_DIR)
-    prediction_file_paths = list(filter(lambda x: x.endswith(".npy"), get_filepaths_for_dir(PREDICTIONS_DIR)))
-    annot_file_paths = get_filepaths_for_dir(annot_path)
+    cloud_file_paths = sorted(get_filepaths_for_dir(CLOUDS_DIR), key=lambda x: sort_by(os.path.split(x)[-1][:-4]))
+    prediction_folders = sorted(get_filepaths_for_dir(PREDICTIONS_DIR), key=lambda x: sort_by(os.path.split(x)[-1]))
+    prediction_grouped_file_paths = [
+        list(filter(lambda x: x.endswith(".npy"), get_filepaths_for_dir(folder))) for folder in prediction_folders
+    ]
+    annot_file_paths = sorted(get_filepaths_for_dir(annot_path), key=lambda x: sort_by(os.path.split(x)[-1][:-4]))
 
-    return zip(cloud_file_paths, annot_file_paths, prediction_file_paths)
+    return zip(cloud_file_paths, annot_file_paths, prediction_grouped_file_paths)
 
 
 def visualize_pcd_labels(pcd_points: np.array, labels: np.array, filename: str = None):
@@ -129,10 +136,69 @@ def visualize_pcd_labels(pcd_points: np.array, labels: np.array, filename: str =
         o3d.io.write_point_cloud(filename, pcd_for_vis)
 
 
+def dump_info(info, file=None):
+    print(info)
+    if file is not None:
+        print(info, file=file)
+
+
+def measure_algo(algo_name: str, annot_path: str, log_file):
+    metrics_average = {metric.__name__: 0 for metric in all_plane_metrics}
+    dump_info("-------------Results for algo: '{}'--------------".format(algo_name), log_file)
+    predict_labels(algo_name)
+
+    for cloud_frame_path, annot_frame_path, prediction_group in get_path_to_frames(annot_path):
+        pcd_points = np.asarray(o3d.io.read_point_cloud(cloud_frame_path).points)
+        gt_labels = read_labels(annot_frame_path)
+
+        # remove zero depth (for TUM)
+        zero_depth_mask = np.sum(pcd_points == 0, axis=-1) == 3
+        pcd_points = pcd_points[~zero_depth_mask]
+        gt_labels = gt_labels[~zero_depth_mask]
+
+        # Find the best annotation from algorithm for frame
+        max_mean_index = 0
+        max_mean = 0
+        for prediction_index, prediction_frame_path in enumerate(prediction_group):
+            pred_labels = np.load(prediction_frame_path)
+            # remove zero depth (for TUM)
+            pred_labels = pred_labels[~zero_depth_mask]
+
+            metric_res = mean(pcd_points, pred_labels, gt_labels, metrics.iou)
+            if metric_res > max_mean:
+                max_mean = metric_res
+                max_mean_index = prediction_index
+
+        # Load chosen predictions
+        chosen_prediction_path = prediction_group[max_mean_index]
+        pred_labels = np.load(chosen_prediction_path)
+        pred_labels = pred_labels[~zero_depth_mask]
+        # visualize_pcd_labels(pcd_points, pred_labels)
+
+        # Print metrics results
+        dump_info("********Result for frame: '{}'********".format(os.path.split(cloud_frame_path)[-1][:-4]), log_file)
+        dump_info(multi_value(pcd_points, pred_labels, gt_labels), log_file)
+        for metric in all_plane_metrics:
+            metric_res = mean(pcd_points, pred_labels, gt_labels, metric)
+            metrics_average[metric.__name__] += metric_res
+            dump_info("Mean {0}: {1}".format(metric.__name__, metric_res), log_file)
+
+    dump_info("--------------------------------------------------------", log_file)
+    dump_info("----------------Average of algo: '{}'----------------".format(algo_name), log_file)
+    for metric_name, sum_value in metrics_average.items():
+        dump_info(
+            "Average {0} for dataset is: {1}".format(metric_name, sum_value / len(os.listdir(CLOUDS_DIR))),
+            log_file
+        )
+
+    dump_info("--------------------------------------------------------", log_file)
+    dump_info("----------------End of algo: '{}'--------------------".format(algo_name), log_file)
+    dump_info("--------------------------------------------------------", log_file)
+
+
 if __name__ == "__main__":
     depth_path = sys.argv[1]
     annot_path = sys.argv[2]
-    # output_path = sys.argv[3]
 
     # for icl_tum format
     camera_intrinsics = CameraIntrinsics(
@@ -145,34 +211,6 @@ if __name__ == "__main__":
 
     prepare_clouds(depth_path)
 
-    for algo_name in algos.keys():
-        metrics_average = {metric.__name__: 0 for metric in all_plane_metrics}
-        print("Results for algo: '{}'".format(algo_name))
-        predict_labels(algo_name)
-
-        for cloud_frame_path, annot_frame_path, prediction_frame_path in get_path_to_frames(annot_path):
-            pcd_points = np.asarray(o3d.io.read_point_cloud(cloud_frame_path).points)
-            gt_labels = read_labels(annot_frame_path)
-            pred_labels = np.load(prediction_frame_path)
-
-            # remove zero depth (for TUM)
-            zero_depth_mask = np.sum(pcd_points == 0, axis=-1) == 3
-            pcd_points = pcd_points[~zero_depth_mask]
-            gt_labels = gt_labels[~zero_depth_mask]
-            pred_labels = pred_labels[~zero_depth_mask]
-
-            # visualize_pcd_labels(pcd_points, gt_labels)
-
-            print("Result for frame {}".format(os.path.split(cloud_frame_path)[-1][:-4]))
-
-            visualize_pcd_labels(pcd_points, pred_labels)
-
-            print(multi_value(pcd_points, pred_labels, gt_labels))
-
-            for metric in all_plane_metrics:
-                metric_res = mean(pcd_points, pred_labels, gt_labels, metric)
-                metrics_average[metric.__name__] += metric_res
-                print("Mean {0}: {1}".format(metric.__name__, metric_res))
-
-        for metric_name, sum_value in metrics_average.values():
-            print("Average {0} for dataset is: {1}".format(metric_name, sum_value / len(os.listdir(CLOUDS_DIR))))
+    with open("results.txt", 'w') as log_file:
+        for algo_name in algos.keys():
+            measure_algo(algo_name, annot_path, log_file)
