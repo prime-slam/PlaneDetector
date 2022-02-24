@@ -1,24 +1,15 @@
 import os
-import sys
 from shutil import rmtree
 
 import cv2
 import docker
 import numpy as np
 import open3d as o3d
+from pypcd import pypcd
 
-from scripts.eval.metrics import metrics
-from scripts.eval.metrics.metrics import multi_value, mean
-
-
-class CameraIntrinsics:
-    def __init__(self, fx, fy, cx, cy, factor):
-        self.fx = fx
-        self.fy = fy
-        self.cx = cx
-        self.cy = cy
-        self.factor = factor
-
+from metrics import metrics
+from metrics.metrics import multi_value, mean
+from src.parser import loaders, create_parser
 
 UNSEGMENTED_COLOR = np.asarray([0, 0, 0], dtype=int)
 
@@ -37,24 +28,11 @@ all_plane_metrics = [
 CLOUDS_DIR = "input"
 PREDICTIONS_DIR = "output"
 
-
-def sort_by(x):
-    return int(x)
-
-
-def read_pcd_from_depth(depth_frame_path: str, camera_intrinsics: CameraIntrinsics) -> np.array:
-    depth_image = cv2.imread(depth_frame_path, cv2.IMREAD_ANYDEPTH)
-    image_height, image_width = depth_image.shape[:2]
-    pcd_points = np.zeros((image_height * image_width, 3))
-
-    column_indices = np.tile(np.arange(image_width), (image_height, 1)).flatten()
-    row_indices = np.transpose(np.tile(np.arange(image_height), (image_width, 1))).flatten()
-
-    pcd_points[:, 2] = depth_image.flatten() / camera_intrinsics.factor
-    pcd_points[:, 0] = (column_indices - camera_intrinsics.cx) * pcd_points[:, 2] / camera_intrinsics.fx
-    pcd_points[:, 1] = (row_indices - camera_intrinsics.cy) * pcd_points[:, 2] / camera_intrinsics.fy
-
-    return pcd_points
+annot_sorters = {
+    'tum': lambda x: x,
+    'icl_tum': lambda x: int(x),
+    'icl': lambda x: x
+}
 
 
 def read_labels(annot_frame_path: str) -> np.array:
@@ -80,6 +58,15 @@ def predict_labels(algo_name: str):
     path_to_input = os.path.join(current_dir_abs, CLOUDS_DIR)
     path_to_output = os.path.join(current_dir_abs, PREDICTIONS_DIR)
 
+    # for filename in os.listdir(path_to_input):
+    #     folder_path = os.path.join(path_to_output, filename[:-4])
+    #     os.mkdir(folder_path)
+    #     pcd = o3d.io.read_point_cloud(os.path.join(path_to_input, filename))
+    #     o3d.io.write_point_cloud(os.path.join(folder_path, filename), pcd)
+    #     np.save(
+    #         os.path.join(folder_path, "{}.npy".format(filename[:-4])),
+    #         np.ones(np.asarray(pcd.points).shape[0], dtype=int)
+    #     )
     client = docker.from_env()
     docker_image_name = algos[algo_name]
     container = client.containers.run(
@@ -94,17 +81,22 @@ def predict_labels(algo_name: str):
         print(line.strip())
 
 
-def prepare_clouds(depth_path: str):
+def prepare_clouds(dataset_path: str, loader_name: str):
     if os.path.exists(CLOUDS_DIR):
         rmtree(CLOUDS_DIR)
     os.mkdir(CLOUDS_DIR)
 
-    for depth_frame_path in get_filepaths_for_dir(depth_path):
-        frame_name = os.path.split(depth_frame_path)[-1][:-4]
-        pcd_points = read_pcd_from_depth(depth_frame_path, camera_intrinsics)
-        pcd = o3d.geometry.PointCloud()
-        pcd.points = o3d.utility.Vector3dVector(pcd_points)
-        o3d.io.write_point_cloud(os.path.join(CLOUDS_DIR, "{}.pcd".format(frame_name)), pcd)
+    loader = loaders[loader_name](dataset_path)
+    for depth_frame_num in range(loader.get_frame_count()):
+        pcd_points = loader.read_pcd(depth_frame_num)
+        cloud_filepath = os.path.join(CLOUDS_DIR, "{:04d}.pcd".format(depth_frame_num))
+        # pcd = o3d.geometry.PointCloud()
+        # pcd.points = o3d.utility.Vector3dVector(pcd_points)
+        # o3d.io.write_point_cloud(cloud_filepath, pcd)
+        pc = pypcd.make_xyz_point_cloud(pcd_points)
+        pc.width = loader.cam_intrinsics.width
+        pc.height = loader.cam_intrinsics.height
+        pc.save_pcd(cloud_filepath, compression='binary')
 
 
 def get_filepaths_for_dir(dir_path: str):
@@ -113,7 +105,8 @@ def get_filepaths_for_dir(dir_path: str):
     return file_paths
 
 
-def get_path_to_frames(annot_path: str) -> [(str, str)]:
+def get_path_to_frames(annot_path: str, loader_name: str) -> [(str, str)]:
+    sort_by = annot_sorters[loader_name]
     cloud_file_paths = sorted(get_filepaths_for_dir(CLOUDS_DIR), key=lambda x: sort_by(os.path.split(x)[-1][:-4]))
     prediction_folders = sorted(get_filepaths_for_dir(PREDICTIONS_DIR), key=lambda x: sort_by(os.path.split(x)[-1]))
     prediction_grouped_file_paths = [
@@ -142,12 +135,12 @@ def dump_info(info, file=None):
         print(info, file=file)
 
 
-def measure_algo(algo_name: str, annot_path: str, log_file):
+def measure_algo(algo_name: str, annot_path: str, loader_name: str, log_file):
     metrics_average = {metric.__name__: 0 for metric in all_plane_metrics}
     dump_info("-------------Results for algo: '{}'--------------".format(algo_name), log_file)
     predict_labels(algo_name)
 
-    for cloud_frame_path, annot_frame_path, prediction_group in get_path_to_frames(annot_path):
+    for cloud_frame_path, annot_frame_path, prediction_group in get_path_to_frames(annot_path, loader_name):
         pcd_points = np.asarray(o3d.io.read_point_cloud(cloud_frame_path).points)
         gt_labels = read_labels(annot_frame_path)
 
@@ -197,20 +190,11 @@ def measure_algo(algo_name: str, annot_path: str, log_file):
 
 
 if __name__ == "__main__":
-    depth_path = sys.argv[1]
-    annot_path = sys.argv[2]
+    parser = create_parser()
+    args = parser.parse_args()
 
-    # for icl_tum format
-    camera_intrinsics = CameraIntrinsics(
-        fx=481.20,  # X-axis focal length
-        fy=-480.00,  # Y-axis focal length
-        cx=319.50,  # X-axis principle point
-        cy=239.50,  # Y-axis principle point
-        factor=5000  # for the 16-bit PNG files
-    )
-
-    prepare_clouds(depth_path)
+    prepare_clouds(args.dataset_path, args.loader)
 
     with open("results.txt", 'w') as log_file:
         for algo_name in algos.keys():
-            measure_algo(algo_name, annot_path, log_file)
+            measure_algo(algo_name, args.annotations_path, args.loader, log_file)
