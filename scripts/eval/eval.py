@@ -14,7 +14,7 @@ from src.parser import loaders, create_parser
 UNSEGMENTED_COLOR = np.asarray([0, 0, 0], dtype=int)
 
 algos = {
-    "pclrg": "p0l0satik/pclrg:1.0"
+    "storm-irit": "akornilova/storm_irit:1.0"
 }
 
 all_plane_metrics = [
@@ -81,13 +81,13 @@ def predict_labels(algo_name: str):
         print(line.strip())
 
 
-def prepare_clouds(dataset_path: str, loader_name: str):
+def prepare_clouds(dataset_path: str, loader_name: str, step: int):
     if os.path.exists(CLOUDS_DIR):
         rmtree(CLOUDS_DIR)
     os.mkdir(CLOUDS_DIR)
 
     loader = loaders[loader_name](dataset_path)
-    for depth_frame_num in range(loader.get_frame_count()):
+    for depth_frame_num in range(0, loader.get_frame_count(), step):
         pcd_points = loader.read_pcd(depth_frame_num)
         cloud_filepath = os.path.join(CLOUDS_DIR, "{:04d}.pcd".format(depth_frame_num))
         # pcd = o3d.geometry.PointCloud()
@@ -195,7 +195,7 @@ if __name__ == "__main__":
     CLOUDS_DIR = os.path.join(args.workdir, CLOUDS_DIR)
     PREDICTIONS_DIR = os.path.join(args.workdir, PREDICTIONS_DIR)
 
-    prepare_clouds(args.dataset_path, args.loader)
+    prepare_clouds(args.dataset_path, args.loader, 50)
 
     with open( os.path.join(args.workdir, "results.txt"), 'w') as log_file:
         for algo_name in algos.keys():
