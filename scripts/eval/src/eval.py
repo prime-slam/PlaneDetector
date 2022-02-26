@@ -88,8 +88,8 @@ def prepare_clouds(dataset_path: str, loader_name: str):
 
     loader = loaders[loader_name](dataset_path)
     for depth_frame_num in range(0, loader.get_frame_count(), 50):
-        pcd_points = loader.read_pcd(depth_frame_num)
-        empty_rgba = np.zeros((pcd_points.shape[0], 1), dtype=float)
+        pcd_points = loader.read_pcd(depth_frame_num).astype(dtype=np.float32)
+        empty_rgba = np.zeros((pcd_points.shape[0], 1), dtype=np.float32)
         pcd_points_rgba = np.concatenate([pcd_points, empty_rgba], axis=-1)
         cloud_filepath = os.path.join(CLOUDS_DIR, "{:04d}.pcd".format(depth_frame_num))
         # pcd = o3d.geometry.PointCloud()
