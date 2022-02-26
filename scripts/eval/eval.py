@@ -197,6 +197,6 @@ if __name__ == "__main__":
 
     prepare_clouds(args.dataset_path, args.loader)
 
-    with open("results.txt", 'w') as log_file:
+    with open( os.path.join(args.workdir, "results.txt"), 'w') as log_file:
         for algo_name in algos.keys():
             measure_algo(algo_name, args.annotations_path, args.loader, log_file)
