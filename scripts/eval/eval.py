@@ -93,7 +93,7 @@ def prepare_clouds(dataset_path: str, loader_name: str, step: int):
         # pcd = o3d.geometry.PointCloud()
         # pcd.points = o3d.utility.Vector3dVector(pcd_points)
         # o3d.io.write_point_cloud(cloud_filepath, pcd)
-        pc = pypcd.make_xyz_point_cloud(pcd_points)
+        pc = pypcd.make_xyz_rgb_point_cloud(pcd_points_rgba)
         pc.width = loader.cam_intrinsics.width
         pc.height = loader.cam_intrinsics.height
         pc.save_pcd(cloud_filepath, compression='binary')
