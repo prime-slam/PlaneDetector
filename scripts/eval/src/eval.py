@@ -14,7 +14,7 @@ from src.parser import loaders, create_parser
 UNSEGMENTED_COLOR = np.asarray([0, 0, 0], dtype=int)
 
 algos = {
-    "ddpff": "ddpff:1.0"
+    "ddpff": "dmitrii12/ddpff:1.0"
 }
 
 all_plane_metrics = [
@@ -87,13 +87,15 @@ def prepare_clouds(dataset_path: str, loader_name: str):
     os.mkdir(CLOUDS_DIR)
 
     loader = loaders[loader_name](dataset_path)
-    for depth_frame_num in range(loader.get_frame_count()):
+    for depth_frame_num in range(0, loader.get_frame_count(), 50):
         pcd_points = loader.read_pcd(depth_frame_num)
+        empty_rgba = np.zeros((pcd_points.shape[0], 1), dtype=float)
+        pcd_points_rgba = np.concatenate([pcd_points, empty_rgba], axis=-1)
         cloud_filepath = os.path.join(CLOUDS_DIR, "{:04d}.pcd".format(depth_frame_num))
         # pcd = o3d.geometry.PointCloud()
         # pcd.points = o3d.utility.Vector3dVector(pcd_points)
         # o3d.io.write_point_cloud(cloud_filepath, pcd)
-        pc = pypcd.make_xyz_point_cloud(pcd_points)
+        pc = pypcd.make_xyz_rgb_point_cloud(pcd_points_rgba)
         pc.width = loader.cam_intrinsics.width
         pc.height = loader.cam_intrinsics.height
         pc.save_pcd(cloud_filepath, compression='binary')
