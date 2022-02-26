@@ -7,14 +7,14 @@ import numpy as np
 import open3d as o3d
 from pypcd import pypcd
 
-from metrics import metrics
-from metrics.metrics import multi_value, mean
+from src.metrics import metrics
+from src.metrics.metrics import multi_value, mean
 from src.parser import loaders, create_parser
 
 UNSEGMENTED_COLOR = np.asarray([0, 0, 0], dtype=int)
 
 algos = {
-    "ddpff": "ddpff:1.0"
+    "storm-irit": "akornilova/storm_irit:1.0"
 }
 
 all_plane_metrics = [
@@ -55,8 +55,8 @@ def predict_labels(algo_name: str):
     os.mkdir(PREDICTIONS_DIR)
 
     current_dir_abs = os.path.abspath(os.path.curdir)
-    path_to_input = os.path.join(current_dir_abs, CLOUDS_DIR)
-    path_to_output = os.path.join(current_dir_abs, PREDICTIONS_DIR)
+    # path_to_input = os.path.join(current_dir_abs, CLOUDS_DIR)
+    # path_to_output = os.path.join(current_dir_abs, PREDICTIONS_DIR)
 
     # for filename in os.listdir(path_to_input):
     #     folder_path = os.path.join(path_to_output, filename[:-4])
@@ -72,8 +72,8 @@ def predict_labels(algo_name: str):
     container = client.containers.run(
         docker_image_name,
         volumes=[
-            '{}:/app/build/input'.format(path_to_input),
-            '{}:/app/build/output'.format(path_to_output)
+            '{}:/app/build/input'.format(CLOUDS_DIR),
+            '{}:/app/build/output'.format(PREDICTIONS_DIR)
         ],
         detach=True
     )
@@ -81,13 +81,13 @@ def predict_labels(algo_name: str):
         print(line.strip())
 
 
-def prepare_clouds(dataset_path: str, loader_name: str):
+def prepare_clouds(dataset_path: str, loader_name: str, step: int):
     if os.path.exists(CLOUDS_DIR):
         rmtree(CLOUDS_DIR)
     os.mkdir(CLOUDS_DIR)
 
     loader = loaders[loader_name](dataset_path)
-    for depth_frame_num in range(loader.get_frame_count()):
+    for depth_frame_num in range(0, loader.get_frame_count(), step):
         pcd_points = loader.read_pcd(depth_frame_num)
         cloud_filepath = os.path.join(CLOUDS_DIR, "{:04d}.pcd".format(depth_frame_num))
         # pcd = o3d.geometry.PointCloud()
@@ -192,9 +192,11 @@ def measure_algo(algo_name: str, annot_path: str, loader_name: str, log_file):
 if __name__ == "__main__":
     parser = create_parser()
     args = parser.parse_args()
+    CLOUDS_DIR = os.path.join(args.workdir, CLOUDS_DIR)
+    PREDICTIONS_DIR = os.path.join(args.workdir, PREDICTIONS_DIR)
 
-    prepare_clouds(args.dataset_path, args.loader)
+    prepare_clouds(args.dataset_path, args.loader, 50)
 
-    with open("results.txt", 'w') as log_file:
+    with open( os.path.join(args.workdir, "results.txt"), 'w') as log_file:
         for algo_name in algos.keys():
             measure_algo(algo_name, args.annotations_path, args.loader, log_file)

@@ -22,11 +22,17 @@ def create_parser():
         help='Path to annotations folder'
     )
     parser.add_argument(
+        'workdir',
+        type=str,
+        help='Folder to store input and output directories'
+    )
+
+    parser.add_argument(
         '--loader',
         type=str,
         required=True,
         choices=loaders.keys(),
         help='Name of loader for dataset'
     )
-
+    
     return parser
