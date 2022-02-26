@@ -14,7 +14,7 @@ from src.parser import loaders, create_parser
 UNSEGMENTED_COLOR = np.asarray([0, 0, 0], dtype=int)
 
 algos = {
-    "ddpff": "ddpff:1.0"
+    "pclrg": "p0l0satik/pclrg:1.0"
 }
 
 all_plane_metrics = [
@@ -55,8 +55,8 @@ def predict_labels(algo_name: str):
     os.mkdir(PREDICTIONS_DIR)
 
     current_dir_abs = os.path.abspath(os.path.curdir)
-    path_to_input = os.path.join(current_dir_abs, CLOUDS_DIR)
-    path_to_output = os.path.join(current_dir_abs, PREDICTIONS_DIR)
+    # path_to_input = os.path.join(current_dir_abs, CLOUDS_DIR)
+    # path_to_output = os.path.join(current_dir_abs, PREDICTIONS_DIR)
 
     # for filename in os.listdir(path_to_input):
     #     folder_path = os.path.join(path_to_output, filename[:-4])
@@ -72,8 +72,8 @@ def predict_labels(algo_name: str):
     container = client.containers.run(
         docker_image_name,
         volumes=[
-            '{}:/app/build/input'.format(path_to_input),
-            '{}:/app/build/output'.format(path_to_output)
+            '{}:/app/build/input'.format(CLOUDS_DIR),
+            '{}:/app/build/output'.format(PREDICTIONS_DIR)
         ],
         detach=True
     )
@@ -192,6 +192,8 @@ def measure_algo(algo_name: str, annot_path: str, loader_name: str, log_file):
 if __name__ == "__main__":
     parser = create_parser()
     args = parser.parse_args()
+    CLOUDS_DIR = os.path.join(args.workdir, CLOUDS_DIR)
+    PREDICTIONS_DIR = os.path.join(args.workdir, PREDICTIONS_DIR)
 
     prepare_clouds(args.dataset_path, args.loader)
 
