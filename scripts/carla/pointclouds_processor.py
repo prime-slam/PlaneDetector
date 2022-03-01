@@ -8,7 +8,11 @@ import ast
 
 from pykdtree.kdtree import KDTree
 
-PLANAR_IDS = [7]
+PLANAR_IDS = {
+    6: 1,
+    7: 1,
+    8: 2
+}
 
 
 def visualize_pcd_labels(pcd: o3d.geometry.PointCloud, labels: np.array, filename: str = None):
@@ -27,7 +31,7 @@ def pcd_from_carla_line(line: str) -> (o3d.geometry.PointCloud, np.array):
     points_packed = ast.literal_eval(line.split(",|,")[1])
     points = np.asarray([point_label_id[0] for point_label_id in points_packed])
     labels = [point_label_id[1] for point_label_id in points_packed]
-    labels = np.asarray(list(map(lambda x: x if x in PLANAR_IDS else 0, labels)))
+    labels = np.asarray(list(map(lambda x: PLANAR_IDS[x] if x in PLANAR_IDS else 0, labels)))
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(points)
 
@@ -165,23 +169,23 @@ def get_most_popular_label(frame_indices: np.array, *args, **kwargs) -> int:
 
 
 def annotate_frame_with_map(frame_pcd: o3d.geometry.PointCloud, map_kd_tree: KDTree, map_labels: np.array, map_pcd) -> np.array:
-    map_pcd.paint_uniform_color([0, 0, 0])
-    labels_unique = np.unique(map_labels)
-    colors = np.concatenate([np.asarray([[0,0,0]]), np.random.rand(np.max(labels_unique), 3)])
-    map_colors = colors[map_labels]
-    map_pcd.colors = o3d.utility.Vector3dVector(map_colors)
-    frame_pcd.paint_uniform_color([1, 0, 0])
+    # map_pcd.paint_uniform_color([0, 0, 0])
+    # labels_unique = np.unique(map_labels)
+    # colors = np.concatenate([np.asarray([[0,0,0]]), np.random.rand(np.max(labels_unique), 3)])
+    # map_colors = colors[map_labels]
+    # map_pcd.colors = o3d.utility.Vector3dVector(map_colors)
+    # frame_pcd.paint_uniform_color([1, 0, 0])
     # o3d.visualization.draw_geometries([map_pcd, frame_pcd])
-    vis = o3d.visualization.VisualizerWithEditing()
-    vis.create_window()
-    vis.add_geometry(map_pcd)
-    vis.add_geometry(frame_pcd)
-    vis.run()  # user picks points
-    vis.destroy_window()
-    picked = vis.get_picked_points()
-    print(np.asarray(map_pcd.points)[picked[0]])
-    print(np.asarray(map_pcd.points)[picked[1]])
-    print(map_labels[picked[0]])
+    # vis = o3d.visualization.VisualizerWithEditing()
+    # vis.create_window()
+    # vis.add_geometry(map_pcd)
+    # vis.add_geometry(frame_pcd)
+    # vis.run()  # user picks points
+    # vis.destroy_window()
+    # picked = vis.get_picked_points()
+    # print(np.asarray(map_pcd.points)[picked[0]])
+    # print(np.asarray(map_pcd.points)[picked[1]])
+    # print(map_labels[picked[0]])
 
     # points with no reference will be marked with len(mapped_frame_pcd) index, so add zero to this index
     map_labels = np.concatenate([map_labels, np.asarray([0])])
@@ -220,7 +224,7 @@ def process(data_path, annot_path, output_path):
         map_labels = annotate_map(map_pcd, annot_path, data_path)
         np.save(annot_filename, map_labels)
 
-    visualize_pcd_labels(map_pcd, map_labels)
+    # visualize_pcd_labels(map_pcd, map_labels)
 
     annotate_frames(data_path, output_path, map_pcd, map_labels)
 

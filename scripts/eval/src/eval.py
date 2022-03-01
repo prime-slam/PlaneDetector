@@ -5,11 +5,10 @@ import cv2
 import docker
 import numpy as np
 import open3d as o3d
+from evops.metrics import metrics, multi_value, mean
 from pypcd import pypcd
 
-from metrics import metrics
-from metrics.metrics import multi_value, mean
-from src.parser import loaders, create_parser
+from scripts.eval.src.parser import loaders, create_parser
 
 UNSEGMENTED_COLOR = np.asarray([0, 0, 0], dtype=int)
 

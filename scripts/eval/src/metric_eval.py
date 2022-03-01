@@ -106,8 +106,9 @@ def measure_algo(pred_path: str, annot_path: str, loader_name: str, annot_step: 
             metric_res = mean(pcd_points, pred_labels, gt_labels, metric)
             metrics_final_res[frame_index, index + 6] = metric_res
 
-        pd.DataFrame(metrics_final_res, columns=column_names, index=None).to_csv("results.csv", index=False)
         print("Metrics calculated for frame: {}".format(os.path.split(cloud_frame_path)[-1][:-4]))
+
+    pd.DataFrame(metrics_final_res, columns=column_names, index=None).to_csv("results.csv", index=False)
 
 
 loaders = ['tum', 'icl_tum', 'icl']
