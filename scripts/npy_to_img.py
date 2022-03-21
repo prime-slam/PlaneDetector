@@ -12,6 +12,8 @@ if __name__ == "__main__":
     for folder in os.listdir(input_path):
         folder_path = os.path.join(input_path, folder)
         for filename in os.listdir(folder_path):
+            if not filename.endswith('.npy'):
+                continue
             file_path = os.path.join(folder_path, filename)
             labels = np.load(file_path).astype(dtype=int)
             labels_unique = np.unique(labels)

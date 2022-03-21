@@ -61,7 +61,8 @@ def get_path_to_frames(pred_path: str, annot_path: str, loader_name: str, annot_
 
 def measure_algo(pred_path: str, annot_path: str, loader_name: str, annot_step: int):
     pred_amount = len(os.listdir(annot_path))
-    metrics_final_res = np.zeros((pred_amount, len(all_plane_metrics) + 6), dtype=float)
+    total_frames_count = pred_amount // annot_step + (1 if pred_amount % annot_step != 0 else 0)
+    metrics_final_res = np.zeros((total_frames_count, len(all_plane_metrics) + 6), dtype=float)
 
     multi_value_keys = ["precision", "recall", "under_segmented", "over_segmented", "missed", "noise"]
     mean_metric_names = ["mean_{}".format(metric.__name__) for metric in all_plane_metrics]
