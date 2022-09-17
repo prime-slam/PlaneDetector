@@ -13,7 +13,8 @@ class O3DRansacDetector(BaseDetector):
     @staticmethod
     def detect_plane(pcd: o3d.geometry.PointCloud) -> (np.array, np.array):
         _, inliers = pcd.segment_plane(
-            distance_threshold=0.01,  # 0.03 -- for TUM pioneer;  0.01 -- for TUM desk, long office; 0.005 -- for ICL
+            # 0.03 -- for TUM pioneer;  0.01 -- for TUM desk; 0.02 -- for TUM long office; 0.005 -- for ICL
+            distance_threshold=0.02,
             ransac_n=3,
             num_iterations=1000
         )

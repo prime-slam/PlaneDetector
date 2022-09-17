@@ -2,7 +2,6 @@ import argparse
 
 from src.annotations.cvat.CVATAnnotator import CVATAnnotator
 from src.annotations.sse.SSEAnnotator import SSEAnnotator
-from src.detectors.DDPFFDetector import DDPFFDetector
 from src.detectors.O3DRansacDetector import O3DRansacDetector
 from src.loaders.depth_image.IclLoader import IclLoader
 from src.loaders.depth_image.TumLoader import TumLoader
@@ -27,8 +26,7 @@ annotators = {
 }
 
 algos = {
-    'RANSAC-o3d': O3DRansacDetector,
-    'DDPFF': DDPFFDetector
+    'RANSAC-o3d': O3DRansacDetector
 }
 
 metrics = {
