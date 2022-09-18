@@ -122,7 +122,6 @@ def build_map(parts_path) -> (o3d.geometry.PointCloud, np.array):
         map_labels_list.append(labels)
 
     return map_pcd, np.concatenate(map_labels_list)
-    # return o3d.io.read_point_cloud("map.pcd"), np.load("map.pcd.labels.npy")
 
 
 def unpacking_apply_along_axis(params):
@@ -188,6 +187,8 @@ def annotate_frame_with_map(
 ) -> np.array:
     mapped_frame_pcd = cloud_to_map(frame_pcd, transform_matrix, calib_matrix)
 
+    # Uncomment this if you need to show mapped frame on map
+    # -------------------------
     # map_pcd.paint_uniform_color([0, 0, 0])
     # labels_unique = np.unique(map_labels)
     # colors = np.concatenate([np.asarray([[0,0,0]]), np.random.rand(np.max(labels_unique), 3)])
@@ -205,6 +206,7 @@ def annotate_frame_with_map(
     # print(np.asarray(map_pcd.points)[picked[0]])
     # print(np.asarray(map_pcd.points)[picked[1]])
     # print(map_labels[picked[0]])
+    # -------------------------
 
     # points with no reference will be marked with len(mapped_frame_pcd) index, so add zero to this index
     map_labels = np.concatenate([map_labels, np.asarray([0])])
@@ -250,28 +252,38 @@ if __name__ == "__main__":
     if debug:
         high = loader.get_frame_count()
         control_frame_ids = np.concatenate([np.random.randint(low=0, high=high, size=99), np.asarray([31])])
-        # control_frame_ids = np.asarray([95, 118, 335, 413, 779, 880, 1025, 1502, 1530, 1541, 1552, 1554, 1557, 1642, 1649, 1983, 2326, 2349, 2354, 2357, 2366, 2391, 2395, 2403, 2460, 2461, 2479, 2680, 3300, 3312, 3317, 3322, 3374, 3421, 4050, 4154, 4193])
-        # control_frame_ids = np.asarray([1])
 
     for frame_id in range(loader.get_frame_count()):
-        # if frame_id not in control_frame_ids:
-        #     continue
         frame_pcd = loader.read_pcd(frame_id)
         transform_matrix = poses[frame_id]
-        # frame_labels, frame_indices_in_map = annotate_frame_with_map(frame_pcd, map_kd_tree, map_labels, transform_matrix, calib_matrix)
         frame_labels = annotate_frame_with_map(frame_pcd, map_kd_tree, map_labels, transform_matrix, calib_matrix)
+
+        # Uncomment if part of map for this frame is required
+        # ----------------------------
+        # frame_labels, frame_indices_in_map = annotate_frame_with_map(
+        #     frame_pcd,
+        #     map_kd_tree,
+        #     map_labels,
+        #     transform_matrix,
+        #     calib_matrix
+        # )
         # frame_labels_ref = frame_labels[np.where(frame_indices_in_map != map_labels.size)[0]]
         # frame_indices_in_map = frame_indices_in_map[np.where(frame_indices_in_map != map_labels.size)[0]]
+        # ----------------------------
+
         output_filename = "label-{:06d}.npy".format(frame_id)
         np.save(os.path.join(output_path, output_filename), frame_labels)
 
         if debug and frame_id in control_frame_ids:
             pcd_filename = "{:06d}.pcd".format(frame_id)
-            ref_pcd_filename = "ref_{}".format(pcd_filename)
 
+            # Uncomment if part of map for this frame is required
+            # ----------------------------
+            # ref_pcd_filename = "ref_{}".format(pcd_filename)
             # _, unique_indices = np.unique(frame_indices_in_map, return_index=True)
             # ref_pcd = map_pcd.select_by_index(frame_indices_in_map[unique_indices])
             # ref_labels = frame_labels_ref[unique_indices]
+            # ----------------------------
 
             visualize_pcd_labels(frame_pcd, frame_labels, os.path.join(output_path, pcd_filename))
             # visualize_pcd_labels(ref_pcd, ref_labels, os.path.join(output_path, ref_pcd_filename))

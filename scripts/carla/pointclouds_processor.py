@@ -169,6 +169,9 @@ def get_most_popular_label(frame_indices: np.array, *args, **kwargs) -> int:
 
 
 def annotate_frame_with_map(frame_pcd: o3d.geometry.PointCloud, map_kd_tree: KDTree, map_labels: np.array, map_pcd) -> np.array:
+
+    # Uncomment this if you need to show mapped frame on map
+    # -------------------------
     # map_pcd.paint_uniform_color([0, 0, 0])
     # labels_unique = np.unique(map_labels)
     # colors = np.concatenate([np.asarray([[0,0,0]]), np.random.rand(np.max(labels_unique), 3)])
@@ -186,6 +189,7 @@ def annotate_frame_with_map(frame_pcd: o3d.geometry.PointCloud, map_kd_tree: KDT
     # print(np.asarray(map_pcd.points)[picked[0]])
     # print(np.asarray(map_pcd.points)[picked[1]])
     # print(map_labels[picked[0]])
+    # -------------------------
 
     # points with no reference will be marked with len(mapped_frame_pcd) index, so add zero to this index
     map_labels = np.concatenate([map_labels, np.asarray([0])])

@@ -3,6 +3,7 @@ import os
 import cv2
 import numpy as np
 import open3d as o3d
+from pypcd import pypcd
 
 from scripts.rgbd_annotations.parser import create_input_parser
 from src.FrameProcessor import process_frame
@@ -163,19 +164,22 @@ if __name__ == "__main__":
     original_track_to_unified = {}
     annotation_index = None
 
-    predefined_track_indices_matches = [  # for TUM long_office_val
-        {
-            1: (1, 34),
-            2: (1, 36),
-            5: (1, 35),
-            6: (1, 31),
-            7: (1, 32),
-            9: (1, 1),
-            11: (1, 6),
-            12: (1, 7),
-            13: (1, 2),
-        },
-    ]
+    # predefined_track_indices_matches = [  # for TUM long_office_val
+    #     {
+    #         12: (1, 16),
+    #         1: (1, 18),
+    #         2: (1, 19),
+    #         5: (1, 15),
+    #         4: (1, 20),
+    #         11: (1, 29),
+    #         9: (1, 2),
+    #         10: (1, 1),
+    #         13: (1, 23),
+    #         7: (1, 22),
+    #         8: (1, 5),
+    #         14: (1, 6)
+    #     },
+    # ]
     # predefined_track_indices_matches = [   # for TUM pioneer
     #     {
     #         11: (1, 35),
@@ -302,31 +306,10 @@ if __name__ == "__main__":
     #     }   # for the 3-2 match --- track in 3d peace : (matched piece, track in matched piece)
     #     # if the track is new in this part, than just remove it from list
     # ]
-    # predefined_track_indices_matches = None
+    predefined_track_indices_matches = None
     previous_pcd = None
 
     track_to_color = {}
-
-    # tmp_list = [
-    #     "1305031458.245729",
-    #     "1305031458.277447",
-    #     "1305031458.343898",
-    #     "1305031458.376213",
-    #     "1305031458.443957",
-    #     "1305031458.476034",
-    #     "1305031458.643659",
-    #     "1305031458.676991",
-    #     "1305031458.943997",
-    #     "1305031459.576817",
-    #     "1305031464.183566",
-    #     "1305031464.347553",
-    #     "1305031464.684318",
-    #     "1305031465.251788",
-    #     "1305031465.351729",
-    #     "1305031465.383701",
-    #     "1305031465.416543",
-    #     "1305031465.615685",
-    # ]
 
     for frame_num in range(start_depth_frame_num, loader.get_frame_count()):
         annotation_frame_num = loader.depth_to_rgb_index[frame_num]
@@ -340,22 +323,50 @@ if __name__ == "__main__":
         if annotation_index is None:
             continue
 
-        # frame_timestamp = os.path.split(loader.depth_images[frame_num])[-1][:-4]
-        # if frame_timestamp != "1341848172.562960":
-        # if frame_timestamp != "1341848184.963561":
-        #     continue
+        # Uncomment to save frame as structured pcd
+        # -----------------------------------------
+        # input_pcd = loader.read_pcd(frame_num)
+        # cloud_filename = os.path.join("debug", "{:04d}.pcd".format(frame_num))
 
+        # Use this if you need xyzrgba format
+        # ~~~~~~~
+        # empty_rgba = np.zeros((pcd_points.shape[0], 1), dtype=np.float32)
+        # pcd_points_rgba = np.concatenate([pcd_points, empty_rgba], axis=-1)
+        # pc = pypcd.make_xyz_rgb_point_cloud(pcd_points_rgba)
+        # ~~~~~~~
+
+        # Or this if you need xyz format
+        # ~~~~~~~
+        # pc = pypcd.make_xyz_point_cloud(np.asarray(input_pcd.pcd.points))
+        # ~~~~~~~
+
+        # pc.width = cam_intrinsic.width
+        # pc.height = cam_intrinsic.height
+        # pc.save_pcd(cloud_filename, compression='binary')
+        # continue
+        # -----------------------------------------
+
+        # Uncomment to debug script for single frame
+        # -----------------------------------------
         # frame_timestamp = os.path.split(loader.depth_images[frame_num])[-1][:-4]
-        # if frame_timestamp not in tmp_list:
+        # if frame_timestamp != "1311878271.847691":
         #     continue
-        # else:
-        #     print("{0} -> {1}".format(frame_timestamp, annotation_frame_num))
+        # -----------------------------------------
 
         result_pcd, _ = process_frame(
             loader,
             frame_num,
             annotators[annotation_index],
             args.filter_annotation_outliers,
+            detector=None,
+            benchmark=None
+        )
+
+        result_pcd_no_filter, _ = process_frame(
+            loader,
+            frame_num,
+            annotators[annotation_index],
+            not args.filter_annotation_outliers,
             detector=None,
             benchmark=None
         )
@@ -396,10 +407,6 @@ if __name__ == "__main__":
 
         output_filename = os.path.split(loader.depth_images[frame_num])[-1]
         output_filename = ".".join(output_filename.split(".")[:-1])
-        # pick_and_print_point(result_pcd.get_color_pcd_for_visualization())
-        # PointCloudPrinter(result_pcd.get_color_pcd_for_visualization()).save_to_pcd(output_filename + ".pcd")
-        # cv2.imwrite(output_filename + "rgb.png", cv2.imread(loader.rgb_images[loader.depth_to_rgb_index[frame_num]]))
-        # cv2.imwrite(output_filename + "depth.png", cv2.imread(loader.depth_images[frame_num]))
 
         def filter_tum_planes(plane: SegmentedPlane) -> bool:
             result_points = np.asarray(result_pcd.pcd.points)
@@ -411,7 +418,7 @@ if __name__ == "__main__":
             plane.pcd_indices = plane.pcd_indices[good_indices]
             # mean_distance = np.mean(distances_from_cam)
             # 5 for TUM pioneer, 4 for TUM desk, long office
-            is_zero_dominate = plane.zero_depth_pcd_indices.size / 4 > plane.pcd_indices.size
+            is_zero_dominate = plane.zero_depth_pcd_indices.size / 5 > plane.pcd_indices.size
             # print("Distance: {0}. Size of zero: {1}. Size of plane: {2}".format(
             #     mean_distance,
             #     plane.zero_depth_pcd_indices.size,
@@ -419,12 +426,23 @@ if __name__ == "__main__":
             # ))
 
             # 3 for TUM pioneer, 3.5 for TUM desk,long_office
-            # return mean_distance < 3.5 and not is_zero_dominate
+            # return mean_distance < 3 and not is_zero_dominate
             return not is_zero_dominate
+
+        # We can save frame without applied outliers filters or without tum pixels filters
+        # ----------------------------------
+        # save_frame(result_pcd,  "no_f_" + output_filename, output_path, cam_intrinsic, initial_pcd_transform)
+        # save_frame(
+        #     result_pcd_no_filter,
+        #     "no_ransac_" + output_filename,
+        #     output_path,
+        #     cam_intrinsic,
+        #     initial_pcd_transform
+        # )
+        # ----------------------------------
 
         result_pcd.filter_planes(filter_tum_planes)
         save_frame(result_pcd, output_filename, output_path, cam_intrinsic, initial_pcd_transform)
-        # if frame_num == 1039:
-        #     break
+        print()
 
     print_segment_tracks(original_track_to_unified, annotation_index - 1)

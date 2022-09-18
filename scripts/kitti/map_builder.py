@@ -235,7 +235,6 @@ if __name__ == "__main__":
             path_to_annot_poses,
             annot_filename
         )
-    # map_annot_labels = np.zeros((np.asarray(map_pcd.points).shape[0]), dtype=np.intc)
     print("Annotations loaded to map")
 
     if debug:

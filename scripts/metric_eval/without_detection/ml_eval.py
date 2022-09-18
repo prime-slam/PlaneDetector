@@ -1,15 +1,19 @@
 import os
 
+import evops
 import numpy as np
 import pandas as pd
-from evops.metrics import metrics, mean
+from evops.metrics import multi_value, mean
 
 all_plane_metrics = [
-    metrics.iou,
-    metrics.dice,
-    metrics.precision,
-    metrics.recall,
-    metrics.fScore
+    evops.metrics.iou,
+    evops.metrics.dice
+]
+
+classic_metrics = [
+    evops.metrics.precision,
+    evops.metrics.recall,
+    evops.metrics.fScore
 ]
 
 
@@ -21,10 +25,11 @@ if __name__ == "__main__":
 
     multi_value_keys = ["precision", "recall", "under_segmented", "over_segmented", "missed", "noise"]
     mean_metric_names = ["mean_{}".format(metric.__name__) for metric in all_plane_metrics]
+    classic_metric_names = ["{}".format(metric.__name__) for metric in classic_metrics]
     multi_value_metric_names = ["multi_{}".format(name) for name in multi_value_keys]
-    column_names = multi_value_metric_names + mean_metric_names
+    column_names = multi_value_metric_names + mean_metric_names + classic_metric_names
 
-    metrics_final_res = np.zeros((predicted.shape[0], len(all_plane_metrics) + 6), dtype=float)
+    metrics_final_res = np.zeros((predicted.shape[0], len(all_plane_metrics) + 6 + len(classic_metrics)), dtype=float)
 
     for scene_index, scene_name in enumerate(scene_names):
         scene_bin_filename = "{:06d}.bin".format(scene_name)
@@ -36,13 +41,22 @@ if __name__ == "__main__":
         gt_labels = np.load(annot_filepath)[:105000]
         pred = predicted[scene_index]
 
-        multi_value_res = metrics.multi_value(scene_points, pred, gt_labels)
+        multi_value_res = multi_value(pred, gt_labels)
         for index, key in enumerate(multi_value_keys):
             metrics_final_res[scene_index, index] = multi_value_res[key]
 
         for index, metric in enumerate(all_plane_metrics):
-            metric_res = mean(scene_points, pred, gt_labels, metric)
+            metric_res = mean(pred, gt_labels, metric)
             metrics_final_res[scene_index, index + 6] = metric_res
+
+        for index, metric in enumerate(classic_metrics):
+            try:
+                metric_res = metric(pred, gt_labels, 'iou')
+            except ZeroDivisionError:
+                metric_res = 0
+            except AssertionError:
+                metric_res = 0
+            metrics_final_res[scene_index, index + 6 + len(all_plane_metrics)] = metric_res
 
         print("{0}. Metrics calculated for frame: {1}".format(scene_index, scene_name))
 

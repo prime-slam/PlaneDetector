@@ -62,24 +62,13 @@ def process_mesh(mesh_file_path: str, output_path: str, min_area: float):
     #  construct meshes out of planes
     planes_meshes = []
     for label_triangles in label_to_meshes.values():
-        # triangles_3 = []
-        # vertices_3 = []
         mesh_triangles_for_plane = triangles[label_triangles]
         plane_mesh_vertices = vertices[mesh_triangles_for_plane.flatten()]
         triangles_count = len(label_triangles)
         plane_mesh_triangles = np.arange(triangles_count * 3).reshape((triangles_count, 3))
-        # for i, triangle_id in enumerate(label_triangles):
-        #     triangle = triangles[triangle_id]
-        #     vertices_3.append(vertices[triangle[0]])
-        #     vertices_3.append(vertices[triangle[1]])
-        #     vertices_3.append(vertices[triangle[2]])
-        #
-        #     triangles_3.append(np.arange(i*3, i*3 + 3))
         new_mesh = o3d.geometry.TriangleMesh()
         new_mesh.triangles = o3d.utility.Vector3iVector(plane_mesh_triangles)
         new_mesh.vertices = o3d.utility.Vector3dVector(plane_mesh_vertices)
-        # new_mesh.triangles = o3d.utility.Vector3iVector(triangles_3)
-        # new_mesh.vertices = o3d.utility.Vector3dVector(vertices_3)
         if new_mesh.get_surface_area() == 0:
             continue
         planes_meshes.append(new_mesh)
@@ -101,10 +90,6 @@ def process_mesh(mesh_file_path: str, output_path: str, min_area: float):
             plane_instance_pcd.points = o3d.utility.Vector3dVector(plane_instance_points)
             plane_instance_pcds.append(plane_instance_pcd)
             plane_instance_pcd.paint_uniform_color(get_random_normalized_color())
-
-            # o3d.visualization.draw_geometries([plane_instance_pcd])
-
-    # o3d.visualization.draw_geometries(plane_instance_pcds)
 
     mesh_name = os.path.split(mesh_file_path)[-1][:-4]
     output_filename = "{}.pcd".format(mesh_name)

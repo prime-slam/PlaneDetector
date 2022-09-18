@@ -17,7 +17,10 @@ UNSEGMENTED_COLOR = np.asarray([0, 0, 0], dtype=int)
 
 all_plane_metrics = [
     metrics.iou,
-    metrics.dice,
+    metrics.dice
+]
+
+classic_metrics = [
     metrics.precision,
     metrics.recall,
     metrics.fScore
@@ -62,12 +65,13 @@ def get_path_to_frames(pred_path: str, annot_path: str, loader_name: str, annot_
 def measure_algo(pred_path: str, annot_path: str, loader_name: str, annot_step: int):
     pred_amount = len(os.listdir(annot_path))
     total_frames_count = pred_amount // annot_step + (1 if pred_amount % annot_step != 0 else 0)
-    metrics_final_res = np.zeros((total_frames_count, len(all_plane_metrics) + 6), dtype=float)
+    metrics_final_res = np.zeros((total_frames_count, len(all_plane_metrics) + 6 + len(classic_metrics)), dtype=float)
 
     multi_value_keys = ["precision", "recall", "under_segmented", "over_segmented", "missed", "noise"]
     mean_metric_names = ["mean_{}".format(metric.__name__) for metric in all_plane_metrics]
+    classic_metric_names = ["{}".format(metric.__name__) for metric in classic_metrics]
     multi_value_metric_names = ["multi_{}".format(name) for name in multi_value_keys]
-    column_names = multi_value_metric_names + mean_metric_names
+    column_names = multi_value_metric_names + mean_metric_names + classic_metric_names
 
     for frame_index, data in enumerate(get_path_to_frames(pred_path, annot_path, loader_name, annot_step)):
         cloud_group, annot_frame_path, prediction_group = data
@@ -80,6 +84,9 @@ def measure_algo(pred_path: str, annot_path: str, loader_name: str, annot_step: 
         pcd_points = pcd_points[~zero_depth_mask]
         gt_labels = gt_labels[~zero_depth_mask]
 
+        # Use only for CAPE
+        # evops.metrics.constants.UNSEGMENTED_LABEL = 1
+
         # Find the best annotation from algorithm for frame
         max_mean_index = 0
         max_mean = 0
@@ -88,7 +95,7 @@ def measure_algo(pred_path: str, annot_path: str, loader_name: str, annot_step: 
             # remove zero depth (for TUM)
             pred_labels = pred_labels[~zero_depth_mask]
 
-            metric_res = metrics.mean(pcd_points, pred_labels, gt_labels, metrics.iou)
+            metric_res = metrics.mean(pred_labels, gt_labels, metrics.iou)
             if metric_res > max_mean:
                 max_mean = metric_res
                 max_mean_index = prediction_index
@@ -99,13 +106,22 @@ def measure_algo(pred_path: str, annot_path: str, loader_name: str, annot_step: 
         pred_labels = pred_labels[~zero_depth_mask]
 
         # Print metrics results
-        multi_value_res = metrics.multi_value(pcd_points, pred_labels, gt_labels)
+        multi_value_res = metrics.multi_value(pred_labels, gt_labels)
         for index, key in enumerate(multi_value_keys):
             metrics_final_res[frame_index, index] = multi_value_res[key]
 
         for index, metric in enumerate(all_plane_metrics):
-            metric_res = mean(pcd_points, pred_labels, gt_labels, metric)
+            metric_res = mean(pred_labels, gt_labels, metric)
             metrics_final_res[frame_index, index + 6] = metric_res
+
+        for index, metric in enumerate(classic_metrics):
+            try:
+                metric_res = metric(pred_labels, gt_labels, 'iou')
+            except ZeroDivisionError:
+                metric_res = 0
+            except AssertionError:
+                metric_res = 0
+            metrics_final_res[frame_index, index + 6 + len(all_plane_metrics)] = metric_res
 
         print("Metrics calculated for frame: {}".format(os.path.split(cloud_frame_path)[-1][:-4]))
 

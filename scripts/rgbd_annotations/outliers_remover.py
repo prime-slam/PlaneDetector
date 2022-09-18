@@ -12,17 +12,19 @@ if __name__ == "__main__":
     output_path = sys.argv[2]
 
     colors_to_process = [
-        color_to_string([211, 20, 169]),
-        color_to_string([186, 137, 33]),
-        color_to_string([249, 199, 79]),
-        color_to_string([76, 66, 57]),
-        color_to_string([193, 75, 61]),
-        color_to_string([75, 250, 137]),
-        color_to_string([240, 103, 209]),
-        color_to_string([6, 148, 127]),
-        color_to_string([148, 66, 26]),
-        color_to_string([251, 134, 216]),
-        color_to_string([180, 12, 152]),
+        color_to_string([128, 121, 155]),
+        color_to_string([140, 8, 226]),
+        color_to_string([151, 2, 233]),
+        color_to_string([228, 154, 237]),
+        color_to_string([69, 164, 214]),
+        color_to_string([9, 20, 126]),
+        color_to_string([197, 167, 21]),
+        color_to_string([122, 235, 7]),
+        color_to_string([218, 241, 247]),
+        color_to_string([80, 181, 86]),
+        color_to_string([14, 60, 221]),
+        color_to_string([212, 156, 166]),
+        color_to_string([167, 13, 99]),
     ]
     for image_filename in os.listdir(path_to_images):
         image_path = os.path.join(path_to_images, image_filename)
