@@ -79,8 +79,4 @@ path to the dataset folder, `frame_number` --- number of the frame in dataset (e
 
 
 ## Scripts and miniapps
-
-
-## Notebooks with examples
-
-
+This framework also contains a lot of useful scripts implemented during plane detection benchmark creation. To overview them take a look at `scripts` folder.
